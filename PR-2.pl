@@ -2,16 +2,16 @@
 :- op(300,fx,@). %operador que marca que un elemento debe aumentar su tamaño
 :- dynamic tabla/3.
 
-desplazar(Dir,Num,Cant,Tablero,EvolTablero):- guardarTablero(Tablero),mover(Dir,Num,Cant),combinarElementos(EvolTablero).
+desplazar(Dir,Num,Cant,Tablero,EvolTablero):- guardarTablero(Tablero),Desplazamiento is Num-1,mover(Dir,Desplazamiento,Cant),combinarElementos(EvolTablero).
 
 % guardarTablero (+Tablero).
 % guarda todos los elementos de la lista como predicados de la forma
 % tabla/3, pasa 1 como numero de fila al predicado pasarAHechos ya que
-% la primer fila en pasarse a hechos es la numero 1.
-guardarTablero(Tablero):-pasarAHechos(Tablero,1).
+% la primer fila en pasarse a hechos es la numero 0.
+guardarTablero(Tablero):-pasarAHechos(Tablero,0).
 
 pasarAHechos([],_).
-pasarAHechos([FilaActual|Filas],NumFila):-pasarFila(FilaActual,NumFila,1),SigFila is (NumFila+1),pasarAHechos(Filas,SigFila).
+pasarAHechos([FilaActual|Filas],NumFila):-pasarFila(FilaActual,NumFila,0),SigFila is (NumFila+1),pasarAHechos(Filas,SigFila).
 
 pasarFila([],_,_).
 pasarFila([Elem1|Elementos],NumFila,NumColumna):-pasarElemento(Elem1,NumFila,NumColumna),SigColumna is (NumColumna+1),pasarFila(Elementos,NumFila,SigColumna).
@@ -26,14 +26,14 @@ imprimir(X,Y,Z):-write(' La fila es: '),write(X),write(' La columna es: '),write
 
 %realiza el desplazamiento correspondiente sobre el tablero almacenado
 
-mover(izq,Fila,N):-X is 0-N,desplazarFila(Fila,X).
-mover(der,Fila,N):-desplazarFila(Fila,N).
-mover(arriba,Col,N):-X is 0-N,desplazarCol(Col,X).
+mover(izq,Fila,N):-X is 5-N,desplazarFila(Fila,X).
+mover(der,Fila,N):- desplazarFila(Fila,N).
+mover(arriba,Col,N):-X is 5-N,desplazarCol(Col,X).
 mover(abajo,Col,N):-desplazarCol(Col,N).
 
-desplazarFila(F,N):-forall(tabla(F,C,E),(retract(tabla(F,C,N)),NuevaColumna is ((N+C)+1 mod 6), assert(tabla(F,NuevaColumna,E)))).
+desplazarFila(F,N):-forall(tabla(F,C,E),(retract(tabla(F,C,E)),NuevaColumna is ((N+C) mod 5), assert(tabla(F,NuevaColumna,E)))).
 
-desplazarCol(C,N):-forall(tabla(F,C,E),(retract(tabla(F,C,N)),NuevaFila is ((N+F)+1 mod 6), assert(tabla(NuevaFila,C,E)))).
+desplazarCol(C,N):-forall(tabla(F,C,E),(retract(tabla(F,C,N)),NuevaFila is ((N+F) mod 5), assert(tabla(NuevaFila,C,E)))).
 
 eliminarTodo:-forall(tabla(X,Y,Z),retract(tabla(X,Y,Z))).
 
@@ -44,7 +44,7 @@ eliminarTodo:-forall(tabla(X,Y,Z),retract(tabla(X,Y,Z))).
 
 combinarElementos(_).
 
-pasarTableroAListas(Fila,[X|Xs]):-tabla(Fila,_,_),pasarFilaALista(Fila,1,X),NuevaFila is Fila+1,pasarTableroAListas(NuevaFila,Xs).
+pasarTableroAListas(Fila,[X|Xs]):-tabla(Fila,_,_),pasarFilaALista(Fila,0,X),NuevaFila is Fila+1,pasarTableroAListas(NuevaFila,Xs).
 pasarTableroAListas(_,[]).
 
 %pasarFilaALista(+Fila,-Res)
