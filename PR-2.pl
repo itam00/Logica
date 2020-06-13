@@ -19,7 +19,9 @@ pasarFila([Elem1|Elementos],NumFila,NumColumna):-pasarElemento(Elem1,NumFila,Num
 
 pasarElemento(Elemento,NumFila,NumColumna):-assert(tabla(NumFila,NumColumna,Elemento)).
 
-pasar():-forall(tabla(X,Y,Z),write(X)),forall(tabla(X,Y,Z),write(Y)),forall(tabla(X,Y,Z),write(Z)).
+pasar():-forall(tabla(X,Y,Z),imprimir(X,Y,Z)).
+
+imprimir(X,Y,Z):-write(' La fila es: '),write(X),write(' La columna es: '),write(Y),write(' La muñeca es:'),writeln(Z).
 
 
 %realiza el desplazamiento correspondiente sobre el tablero almacenado
@@ -28,4 +30,9 @@ mover(_,_,_).
 
 combinarElementos(_).
 
+pasarTableroAListas(Fila,[X|Xs]):-tabla(Fila,_,_),pasarFilaALista(Fila,1,X),NuevaFila is Fila+1,pasarTableroAListas(NuevaFila,Xs).
+pasarTableroAListas(_,[]).
 
+%pasarFilaALista(+Fila,-Res)
+pasarFilaALista(Fila,Col,[X|Xs]):-tabla(Fila,Col,X),NuevaCol is Col+1,pasarFilaALista(Fila,NuevaCol,Xs).
+pasarFilaALista(_,_,[]).
