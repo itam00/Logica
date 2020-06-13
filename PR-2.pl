@@ -28,11 +28,11 @@ mover(der,Fila,N):-desplazarFila(Fila,N).
 mover(arriba,Col,N):-X is 0-N,desplazarCol(Col,X).
 mover(abajo,Col,N):-desplazarCol(Col,N).
 
-desplazarFila(F,N):-forall(tabla(F,C,E),(retract(tabla(F,C,N)),NuevaColumna is ((N+C) mod 4), assert(tabla(F,NuevaColumna,E)))).
+desplazarFila(F,N):-forall(tabla(F,C,E),(retract(tabla(F,C,N)),NuevaColumna is ((N+C)+1 mod 6), assert(tabla(F,NuevaColumna,E)))).
 
-desplazarCol(C,N):-forall(tabla(F,C,E),(retract(tabla(F,C,N)),NuevaFila is ((N+F) mod 4), assert(tabla(NuevaFila,C,E)))).
+desplazarCol(C,N):-forall(tabla(F,C,E),(retract(tabla(F,C,N)),NuevaFila is ((N+F)+1 mod 6), assert(tabla(NuevaFila,C,E)))).
 
-elimitarTodo:-forall(tabla(X,Y,Z),retract(tabla(X,Y,Z))).
+eliminarTodo:-forall(tabla(X,Y,Z),retract(tabla(X,Y,Z))).
 
 
 
