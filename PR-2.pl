@@ -1,5 +1,5 @@
-:- op(300,fx,¬). %operador que marca que un elemento debe ser eliminado
-:- op(300,fx,@). %operador que marca que un elemento debe aumentar su tamaño
+:- op(300,fx,/). %operador que marca que un elemento debe ser eliminado
+:- op(300,fx,~). %operador que marca que un elemento debe aumentar su tamaño
 :- dynamic tabla/3.
 
 desplazar(Dir,Num,Cant,Tablero,EvolTablero):- guardarTablero(Tablero),Desplazamiento is Num-1,mover(Dir,Desplazamiento,Cant),combinarElementos(EvolTablero).
@@ -22,8 +22,6 @@ pasar():-forall(tabla(X,Y,Z),imprimir(X,Y,Z)).
 
 imprimir(X,Y,Z):-write(' La fila es: '),write(X),write(' La columna es: '),write(Y),write(' La muñeca es:'),writeln(Z).
 
-
-
 %realiza el desplazamiento correspondiente sobre el tablero almacenado
 
 mover(izq,Fila,N):-X is 5-N,desplazarFila(Fila,X).
@@ -40,10 +38,6 @@ desplazarCol(C,N):-forall(tabla(F,C,E),(retract(tabla(F,C,E)),NuevaFila is ((N+F
 eliminarTodo:-forall(tabla(X,Y,Z),retract(tabla(X,Y,Z))).
 
 
-
-
-
-
 combinarElementos(_).
 
 pasarTableroAListas(Fila,[X|Xs]):-tabla(Fila,_,_),pasarFilaALista(Fila,0,X),NuevaFila is Fila+1,pasarTableroAListas(NuevaFila,Xs).
@@ -52,3 +46,32 @@ pasarTableroAListas(_,[]).
 %pasarFilaALista(+Fila,-Res)
 pasarFilaALista(Fila,Col,[X|Xs]):-tabla(Fila,Col,X),NuevaCol is Col+1,pasarFilaALista(Fila,NuevaCol,Xs).
 pasarFilaALista(_,_,[]).
+
+
+
+buscarCombFila(Fil):-buscarDerecha(Fil,0).
+
+buscarDerecha(Fil,Col):-buscarDerechaAux(Fil,Col,_,0). %no se llama al recursivo ya que solo puede haber una combinacion por col
+buscarDerecha(Fil,Col):-NuevaCol is Col+1,buscarDerecha(Fil,NuevaCol).
+buscarDerecha(_,_).
+
+buscarDerechaAux(Fil,Col,E,Encontrados):-tabla(Fil,Col,E),Nuevos is Encontrados+1,NuevaCol is Col+1,!,buscarDerechaAux(Fil,NuevaCol,E,Nuevos),marcar(Fil,Col).
+buscarDerechaAux(_,_,_,Encontrados):-Encontrados>2.
+
+
+buscarCombColumna(Col):-buscarAbajo(0,Col).
+
+buscarAbajo(Fil,Col):-buscarAbajoAux(Fil,Col,_,0). %no se llama al recursivo ya que solo puede haber una combiacion por col
+buscarAbajo(Fil,Col):-NuevaFil is Fil+1,buscarAbajo(NuevaFil,Col).
+buscarAbajo(_,_).
+
+buscarAbajoAux(Fil,Col,E,Encontrados):-tabla(Fil,Col,~E),Nuevos is Encontrados+1,NuevaFil is Fil+1,!,buscarAbajoAux(NuevaFil,Col,E,Nuevos),marcar(Fil,Col).
+buscarAbajoAux(Fil,Col,E,Encontrados):-tabla(Fil,Col,E),Nuevos is Encontrados+1,NuevaFil is Fil+1,!,buscarAbajoAux(NuevaFil,Col,E,Nuevos),marcar(Fil,Col).
+
+buscarAbajoAux(_,_,_,Encontrados):-Encontrados>2.
+
+
+marcar(Fil,Col):- retract(tabla(Fil,Col,~E)),assert(tabla(Fil,Col,/E)).
+marcar(Fil,Col):-retract(tabla(Fil,Col,E)),assert(tabla(Fil,Col,~E)).
+
+marcado(~_).
