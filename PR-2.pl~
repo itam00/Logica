@@ -1,4 +1,5 @@
 :- op(300,fx,/). %operador que marca que un elemento debe ser eliminado
+
 :- op(300,fx,~). %operador que marca que un elemento debe aumentar su tamaño
 :- dynamic tabla/3.
 
@@ -36,6 +37,12 @@ desplazarCol(C,N):-forall(tabla(F,C,E),(retract(tabla(F,C,E)),NuevaFila is ((N+F
 
 
 eliminarTodo:-forall(tabla(X,Y,Z),retract(tabla(X,Y,Z))).
+
+
+
+eliminarColapsados():-forall(tabla(F,C,~Z),(retract(tabla(F,C,~Z)),gravedad(F,C))).
+
+gravedad(F,C):-forall((tabla(Fila,C,X),Fila=<F),(retract(tabla(Fila,C,X)),NuevaC is C+1,assert(tabla(Fila,NuevaC,X)))),assert(tabla(0,C,x1)).
 
 
 combinarElementos(_).
