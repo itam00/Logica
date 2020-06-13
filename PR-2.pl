@@ -1,5 +1,5 @@
 :- op(300,fx,¬). %operador que marca que un elemento debe ser eliminado
-:- op(300,fx,@). %operador que marca que un elemento debe aumentar su tamaño
+:- op(300,fx,~). %operador que marca que un elemento debe aumentar su tamaño
 :- dynamic tabla/3.
 
 desplazar(Dir,Num,Cant,Tablero,EvolTablero):- guardarTablero(Tablero),Desplazamiento is Num-1,mover(Dir,Desplazamiento,Cant),combinarElementos(EvolTablero).
@@ -33,12 +33,14 @@ mover(abajo,Col,N):-desplazarCol(Col,N).
 
 desplazarFila(F,N):-forall(tabla(F,C,E),(retract(tabla(F,C,E)),NuevaColumna is ((N+C) mod 5), assert(tabla(F,NuevaColumna,E)))).
 
-desplazarCol(C,N):-forall(tabla(F,C,E),(retract(tabla(F,C,N)),NuevaFila is ((N+F) mod 5), assert(tabla(NuevaFila,C,E)))).
+desplazarCol(C,N):-forall(tabla(F,C,E),(retract(tabla(F,C,E)),NuevaFila is ((N+F) mod 5), assert(tabla(NuevaFila,C,E)))).
 
 eliminarTodo:-forall(tabla(X,Y,Z),retract(tabla(X,Y,Z))).
 
 
+eliminarColapsados():-forall(tabla(F,C,~Z),(retract(tabla(F,C,~Z)),gravedad(F,C))).
 
+gravedad(F,C):-forall((tabla(Fila,C,X),Fila=<F),(retract(tabla(Fila,C,X)),NuevaFila is Fila+1,assert(tabla(NuevaFila,C,X)))),assert(tabla(0,C,x1)).
 
 
 
