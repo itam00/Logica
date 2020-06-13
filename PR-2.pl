@@ -9,13 +9,12 @@ desplazar(Dir,Num,Cant,Tablero,EvolTablero):- guardarTablero(Tablero),mover(Dir,
 % tabla/3, pasa 1 como numero de fila al predicado pasarAHechos ya que
 % la primer fila en pasarse a hechos es la numero 1.
 guardarTablero(Tablero):-pasarAHechos(Tablero,1).
-guardarTablero(_):-dynamic tablero/3.
 
 pasarAHechos([],_).
-pasarAHechos([FilaActual|Filas],NumFila):-pasarFila(FilaActual,NumFila,1),SigFila is NumFila+1,pasarAHechos(Filas,SigFila).
+pasarAHechos([FilaActual|Filas],NumFila):-pasarFila(FilaActual,NumFila,1),SigFila is (NumFila+1),pasarAHechos(Filas,SigFila).
 
 pasarFila([],_,_).
-pasarFila([Elem1|Elementos],NumFila,NumColumna):-pasarElemento(Elem1,NumFila,NumColumna),SigColumna is NumColumna+1,pasarFila(Elementos,NumFila,SigColumna).
+pasarFila([Elem1|Elementos],NumFila,NumColumna):-pasarElemento(Elem1,NumFila,NumColumna),SigColumna is (NumColumna+1),pasarFila(Elementos,NumFila,SigColumna).
 
 pasarElemento(Elemento,NumFila,NumColumna):-assert(tabla(NumFila,NumColumna,Elemento)).
 
@@ -24,8 +23,23 @@ pasar():-forall(tabla(X,Y,Z),imprimir(X,Y,Z)).
 imprimir(X,Y,Z):-write(' La fila es: '),write(X),write(' La columna es: '),write(Y),write(' La muñeca es:'),writeln(Z).
 
 
+
 %realiza el desplazamiento correspondiente sobre el tablero almacenado
-mover(_,_,_).
+
+mover(izq,Fila,N):-X is 0-N,desplazarFila(Fila,X).
+mover(der,Fila,N):-desplazarFila(Fila,N).
+mover(arriba,Col,N):-X is 0-N,desplazarCol(Col,X).
+mover(abajo,Col,N):-desplazarCol(Col,N).
+
+desplazarFila(F,N):-forall(tabla(F,C,E),(retract(tabla(F,C,N)),NuevaColumna is ((N+C)+1 mod 6), assert(tabla(F,NuevaColumna,E)))).
+
+desplazarCol(C,N):-forall(tabla(F,C,E),(retract(tabla(F,C,N)),NuevaFila is ((N+F)+1 mod 6), assert(tabla(NuevaFila,C,E)))).
+
+eliminarTodo:-forall(tabla(X,Y,Z),retract(tabla(X,Y,Z))).
+
+
+
+
 
 
 combinarElementos(_).
