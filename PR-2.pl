@@ -11,7 +11,7 @@ desplazar(Dir,Num,Cant,Tablero,EvolTablero):- guardarTablero(Tablero),mover(Dir,
 guardarTablero(Tablero):-pasarAHechos(Tablero,1).
 
 pasarAHechos([],_).
-pasarAHechos([FilaActual|Filas],NumFila):-pasarFila(FilaActual,NumFila,1),SigFila is (NumFila+1),pasarAHechos(Filas,SigFila).
+pasarAHechos([FilaActual|Filas],NumFila):-pasarFila(FilaActual,NumFila,0),SigFila is (NumFila+1),pasarAHechos(Filas,SigFila).
 
 pasarFila([],_,_).
 pasarFila([Elem1|Elementos],NumFila,NumColumna):-pasarElemento(Elem1,NumFila,NumColumna),SigColumna is (NumColumna+1),pasarFila(Elementos,NumFila,SigColumna).
@@ -31,9 +31,9 @@ mover(der,Fila,N):-desplazarFila(Fila,N).
 mover(arriba,Col,N):-X is 0-N,desplazarCol(Col,X).
 mover(abajo,Col,N):-desplazarCol(Col,N).
 
-desplazarFila(F,N):-forall(tabla(F,C,E),(retract(tabla(F,C,N)),NuevaColumna is ((N+C)+1 mod 6), assert(tabla(F,NuevaColumna,E)))).
+desplazarFila(F,N):-forall(tabla(F,C,E),(retract(tabla(F,C,E)),NuevaColumna is (N+C mod 5), assert(tabla(F,NuevaColumna,E)))).
 
-desplazarCol(C,N):-forall(tabla(F,C,E),(retract(tabla(F,C,N)),NuevaFila is ((N+F)+1 mod 6), assert(tabla(NuevaFila,C,E)))).
+desplazarCol(C,N):-forall(tabla(F,C,E),(retract(tabla(F,C,E)),NuevaFila is ((N+F) mod 5), assert(tabla(NuevaFila,C,E)))).
 
 eliminarTodo:-forall(tabla(X,Y,Z),retract(tabla(X,Y,Z))).
 
@@ -44,7 +44,7 @@ eliminarTodo:-forall(tabla(X,Y,Z),retract(tabla(X,Y,Z))).
 
 combinarElementos(_).
 
-pasarTableroAListas(Fila,[X|Xs]):-tabla(Fila,_,_),pasarFilaALista(Fila,1,X),NuevaFila is Fila+1,pasarTableroAListas(NuevaFila,Xs).
+pasarTableroAListas(Fila,[X|Xs]):-tabla(Fila,_,_),pasarFilaALista(Fila,0,X),NuevaFila is Fila+1,pasarTableroAListas(NuevaFila,Xs).
 pasarTableroAListas(_,[]).
 
 %pasarFilaALista(+Fila,-Res)
