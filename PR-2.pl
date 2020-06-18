@@ -19,7 +19,7 @@ pasarFila([Elem1|Elementos],NumFila,NumColumna):-pasarElemento(Elem1,NumFila,Num
 
 pasarElemento(Elemento,NumFila,NumColumna):-assert(tabla(NumFila,NumColumna,Elemento)).
 
-pasar():-forall(tabla(X,Y,Z),imprimir(X,Y,Z)).
+pasar:-forall(tabla(X,Y,Z),imprimir(X,Y,Z)).
 
 imprimir(X,Y,Z):-write(' La fila es: '),write(X),write(' La columna es: '),write(Y),write(' La muñeca es:'),writeln(Z).
 
@@ -36,21 +36,13 @@ desplazarCol(C,N):-forall(tabla(F,C,E),(retract(tabla(F,C,E)),NuevaFila is ((N+F
 
 desplazarFila(F,N):-forall(tabla(F,C,E),(retract(tabla(F,C,E)),NuevaColumna is (N+C mod 5), assert(tabla(F,NuevaColumna,E)))).
 
-desplazarCol(C,N):-forall(tabla(F,C,E),(retract(tabla(F,C,E)),NuevaFila is ((N+F) mod 5), assert(tabla(NuevaFila,C,E)))).
-
-
 
 eliminarTodo:-forall(tabla(X,Y,Z),retract(tabla(X,Y,Z))).
 
-
-
-eliminarColapsados():-forall(tabla(F,C,~Z),(retract(tabla(F,C,~Z)),gravedad(F,C))).
+eliminarColapsados:-forall(tabla(F,C,~Z),(retract(tabla(F,C,~Z)),gravedad(F,C))).
 
 gravedad(F,C):-forall((tabla(Fila,C,X),Fila=<F),(retract(tabla(Fila,C,X)),NuevaFila is Fila+1,assert(tabla(NuevaFila,C,X)))),assert(tabla(0,C,x1)).
 
-
-
-combinarElementos(_).
 
 pasarTableroAListas(Fila,[X|Xs]):-tabla(Fila,_,_),pasarFilaALista(Fila,0,X),NuevaFila is Fila+1,pasarTableroAListas(NuevaFila,Xs).
 pasarTableroAListas(_,[]).
@@ -64,9 +56,10 @@ pasarFilaALista(_,_,[]).
 buscarCombFila(Fil):-buscarDerecha(Fil,0).
 
 buscarDerecha(Fil,Col):-buscarDerechaAux(Fil,Col,_,0). %no se llama al recursivo ya que solo puede haber una combinacion por col
-buscarDerecha(Fil,Col):-NuevaCol is Col+1,buscarDerecha(Fil,NuevaCol).
+buscarDerecha(Fil,Col):-Col<5,NuevaCol is Col+1,buscarDerecha(Fil,NuevaCol).
 buscarDerecha(_,_).
 
+buscarDerechaAux(Fil,Col,E,Encontrados):-tabla(Fil,Col,~E),Nuevos is Encontrados+1,NuevaCol is Col+1,!,buscarDerechaAux(Fil,NuevaCol,E,Nuevos),marcar(Fil,Col).
 buscarDerechaAux(Fil,Col,E,Encontrados):-tabla(Fil,Col,E),Nuevos is Encontrados+1,NuevaCol is Col+1,!,buscarDerechaAux(Fil,NuevaCol,E,Nuevos),marcar(Fil,Col).
 buscarDerechaAux(_,_,_,Encontrados):-Encontrados>2.
 
@@ -74,12 +67,11 @@ buscarDerechaAux(_,_,_,Encontrados):-Encontrados>2.
 buscarCombColumna(Col):-buscarAbajo(0,Col).
 
 buscarAbajo(Fil,Col):-buscarAbajoAux(Fil,Col,_,0). %no se llama al recursivo ya que solo puede haber una combiacion por col
-buscarAbajo(Fil,Col):-NuevaFil is Fil+1,buscarAbajo(NuevaFil,Col).
+buscarAbajo(Fil,Col):-Fil<5,NuevaFil is Fil+1,buscarAbajo(NuevaFil,Col).
 buscarAbajo(_,_).
 
-buscarAbajoAux(Fil,Col,E,Encontrados):-tabla(Fil,Col,~E),Nuevos is Encontrados+1,NuevaFil is Fil+1,!,buscarAbajoAux(NuevaFil,Col,E,Nuevos),marcar(Fil,Col).
-buscarAbajoAux(Fil,Col,E,Encontrados):-tabla(Fil,Col,E),Nuevos is Encontrados+1,NuevaFil is Fil+1,!,buscarAbajoAux(NuevaFil,Col,E,Nuevos),marcar(Fil,Col).
-
+buscarAbajoAux(Fil,Col,E,Encontrados):-tabla(Fil,Col,~E),N is Encontrados+1,Sig is Fil+1,!,buscarAbajoAux(Sig,Col,E,N),marcar(Fil,Col).
+buscarAbajoAux(Fil,Col,E,Encontrados):-tabla(Fil,Col,E),N is Encontrados+1,Sig is Fil+1,!,buscarAbajoAux(Sig,Col,E,N),marcar(Fil,Col).
 buscarAbajoAux(_,_,_,Encontrados):-Encontrados>2.
 
 
@@ -87,3 +79,21 @@ marcar(Fil,Col):- retract(tabla(Fil,Col,~E)),assert(tabla(Fil,Col,/E)).
 marcar(Fil,Col):-retract(tabla(Fil,Col,E)),assert(tabla(Fil,Col,~E)).
 
 marcado(~_).
+marcado(/_).
+
+
+marcarColapsoFil(Fil):-marcarColapsoFil(Fil,0,_).
+
+marcarColapsoFil(Fil,Col,E):-tabla(Fil,Col,~X),E\=X,marcarCentroFil(Fil,Col,E,1).
+marcarColapsoFil(Fil,Col,_):-Col<4,tabla(Fil,Col,/E),Sig is Col+1,marcarColapsoFil(Fil,Sig,E).
+marcarColapsoFil(Fil,Col,E):-Col<4,Sig is Col+1,marcarColapsoFil(Fil,Sig,E).
+marcarColapsoFil(_,_,_).
+
+% solo se verifica hasta la tercera columna ya que no van a haber
+% combiaciones de 3 si no hay un elemento marcado en la tercera columna
+% Si se encuentra un elemento con marca de colapsar se envia por
+% parametro para evitar agregar otra marca de colapsar
+
+marcarCentroFil(Fil,Col,E,Cant):-Col<6,Sig is Col+1,tabla(Fil,Sig,~E),C is Cant+1,marcarCentroFil(Fil,Sig,E,C).%falla cuando llega al final o encuentra aldo distinto
+marcarCentroFil(Fil,Col,E,_):-tabla(Fil,Col,/E).%si la combiacion ya estaba marcada entonces no se debe marcar el centro
+marcarCentroFil(Fil,Col,_,Cant):-Cant>2,Centro is Col - (Cant//2),marcar(Fil,Centro).
