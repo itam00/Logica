@@ -36,12 +36,11 @@ desplazarCol(C,N):-forall(tabla(F,C,E),(retract(tabla(F,C,E)),NuevaFila is ((N+F
 
 desplazarFila(F,N):-forall(tabla(F,C,E),(retract(tabla(F,C,E)),NuevaColumna is (N+C mod 5), assert(tabla(F,NuevaColumna,E)))).
 
-
 eliminarTodo:-forall(tabla(X,Y,Z),retract(tabla(X,Y,Z))).
 
 eliminarColapsados:-forall(tabla(F,C,~Z),(retract(tabla(F,C,~Z)),gravedad(F,C))).
 
-gravedad(F,C):-forall((tabla(Fila,C,X),Fila=<F),(retract(tabla(Fila,C,X)),NuevaFila is Fila+1,assert(tabla(NuevaFila,C,X)))),assert(tabla(0,C,x1)).
+gravedad(F,C):-forall((tabla(Fila,C,X),Fila=<F),(retract(tabla(Fila,C,X)),NuevaFila is Fila+1,assert(tabla(NuevaFila,C,X)))),random_member(Random, [a1,v1,r1]),assert(tabla(0,C,Random)).
 
 
 pasarTableroAListas(Fila,[X|Xs]):-tabla(Fila,_,_),pasarFilaALista(Fila,0,X),NuevaFila is Fila+1,pasarTableroAListas(NuevaFila,Xs).
@@ -97,3 +96,19 @@ marcarColapsoFil(_,_,_).
 marcarCentroFil(Fil,Col,E,Cant):-Col<6,Sig is Col+1,tabla(Fil,Sig,~E),C is Cant+1,marcarCentroFil(Fil,Sig,E,C).%falla cuando llega al final o encuentra aldo distinto
 marcarCentroFil(Fil,Col,E,_):-tabla(Fil,Col,/E).%si la combiacion ya estaba marcada entonces no se debe marcar el centro
 marcarCentroFil(Fil,Col,_,Cant):-Cant>2,Centro is Col - (Cant//2),marcar(Fil,Centro).
+
+
+% Recorre las filas fijandose, si el elemento en esa fila y columna esta
+% marcado, si arriba o abajo hay otro elemento marcado, para poner el
+% colapso ahi.
+marcarColapsoFilaDes(Fil,Col):-tabla(Fil,Col,~M),verificarCombinacionColumnaDes(Fil,Col,~M),marcar(Fil,Col).
+marcarColapsoFilaDes(Fil,Col):-Fil<5,NuevaFila is Fil+1,marcarColapsoFilaDes(NuevaFila,Col).
+
+verificarCombinacionColumnaDes(Fil,Col,Marcada):-ColNueva is Col+1,tabla(Fil,ColNueva,Marcada).
+verificarCombinacionColumnaDes(Fil,Col,Marcada):-ColNueva is Col-1,tabla(Fil,ColNueva,Marcada).
+
+marcarColapsoColumnaDes(Fil,Col):-tabla(Fil,Col,~M),verificarCombinacionFilaDes(Fil,Col,~M),marcar(Fil,Col).
+marcarColapsoColumnaDes(Fil,Col):-Col<5,NuevaCol is Col+1,marcarColapsoColumnaDes(Fil,NuevaCol).
+
+verificarCombinacionFilaDes(Fil,Col,Marcada):-FilNueva is Fil+1,tabla(FilNueva,Col,Marcada).
+verificarCombinacionFilaDes(Fil,Col,Marcada):-FilNueva is Fil-1,tabla(FilNueva,Col,Marcada).
