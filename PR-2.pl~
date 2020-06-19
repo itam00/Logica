@@ -3,7 +3,7 @@
 :- op(300,fx,~). %operador que marca que un elemento debe aumentar su tamaño
 :- dynamic tabla/3.
 
-desplazar(Dir,Num,Cant,Tablero,EvolTablero):- guardarTablero(Tablero),Desplazamiento is Num-1,mover(Dir,Desplazamiento,Cant),combinarElementos(EvolTablero).
+desplazar(Dir,Num,Cant,Tablero,_EvolTablero):- guardarTablero(Tablero),Desplazamiento is Num-1,mover(Dir,Desplazamiento,Cant).
 
 % guardarTablero (+Tablero).
 % guarda todos los elementos de la lista como predicados de la forma
@@ -32,9 +32,19 @@ mover(abajo,Col,N):-desplazarCol(Col,N).
 
 
 
-desplazarCol(C,N):-forall(tabla(F,C,E),(retract(tabla(F,C,E)),NuevaFila is ((N+F) mod 5), assert(tabla(NuevaFila,C,E)))).
+desplazarCol(C,N):-forall(tabla(F,C,E),(retract(tabla(F,C,E)),NuevaFila is ((N+F) mod 5), assert(tabla(NuevaFila,C,E)))),combinarElementosCol(C).
 
-desplazarFila(F,N):-forall(tabla(F,C,E),(retract(tabla(F,C,E)),NuevaColumna is (N+C mod 5), assert(tabla(F,NuevaColumna,E)))).
+desplazarFila(F,N):-forall(tabla(F,C,E),(retract(tabla(F,C,E)),NuevaColumna is ((N+C) mod 5), assert(tabla(F,NuevaColumna,E)))),combinarElementosFil(F).
+
+
+
+combinarElementosCol(Col):-forall(member(X,[0,1,2,3,4]),buscarCombFila(X)),buscarCombColumna(Col),marcarColapsoFilaDes(0,Col).
+combinarElementosFil(Fil):-forall(member(X,[0,1,2,3,4]),buscarCombColumna(X)),buscarCombColumna(Fil),marcarColapsoColumnaDes(Fil,0).
+
+%aca falta lo que hace todo en bucle
+
+
+%de aca para abajo es todo para encontrar y marcar combiaciones
 
 eliminarTodo:-forall(tabla(X,Y,Z),retract(tabla(X,Y,Z))).
 
@@ -83,12 +93,10 @@ marcado(/_).
 
 marcarColapsoFil(Fil):-marcarColapsoFil(Fil,0,_).
 
-
 marcarColapsoFil(Fil,Col,E):-tabla(Fil,Col,~X),E\=X,marcarCentroFil(Fil,Col,E,1).
 marcarColapsoFil(Fil,Col,_):-Col<4,tabla(Fil,Col,/E),Sig is Col+1,marcarColapsoFil(Fil,Sig,E).
 marcarColapsoFil(Fil,Col,E):-Col<4,Sig is Col+1,marcarColapsoFil(Fil,Sig,E).
 marcarColapsoFil(_,_,_).
-
 
 % solo se verifica hasta la tercera columna ya que no van a haber
 % combiaciones de 3 si no hay un elemento marcado en la tercera columna
@@ -100,17 +108,34 @@ marcarCentroFil(Fil,Col,E,_):-tabla(Fil,Col,/E).%si la combiacion ya estaba marc
 marcarCentroFil(Fil,Col,_,Cant):-Cant>2,Centro is Col - (Cant//2),marcar(Fil,Centro).
 
 
+marcarColapsoCol(Fil):-marcarColapsoCol(Fil,0,_).
+
+marcarColapsoCol(Fil,Col,E):-tabla(Fil,Col,~X),E\=X,marcarCentroCol(Fil,Col,E,1).
+marcarColapsoCol(Fil,Col,_):-Fil<4,tabla(Fil,Col,/E),Sig is Fil+1,marcarColapsoCol(Sig,Col,E).
+marcarColapsoCol(Fil,Col,E):-Fil<4,Sig is Fil+1,marcarColapsoCol(Sig,Col,E).
+marcarColapsoCol(_,_,_).
+
+% solo se verifica hasta la tercera columna ya que no van a haber
+% combiaciones de 3 si no hay un elemento marcado en la tercera columna
+% Si se encuentra un elemento con marca de colapsar se envia por
+% parametro para evitar agregar otra marca de colapsar
+
+marcarCentroCol(Fil,Col,E,Cant):-Fil<6,Sig is Fil+1,tabla(Sig,Col,~E),C is Cant+1,marcarCentroCol(Sig,Col,E,C).%falla cuando llega al final o encuentra aldo distinto
+marcarCentroCol(Fil,Col,E,_):-tabla(Fil,Col,/E).%si la combiacion ya estaba marcada entonces no se debe marcar el centro
+marcarCentroCol(Fil,Col,_,Cant):-Cant>2,Centro is Fil - (Cant//2),marcar(Centro,Col).
+
+
 % Recorre las filas fijandose, si el elemento en esa fila y columna esta
 % marcado, si arriba o abajo hay otro elemento marcado, para poner el
 % colapso ahi.
-marcarColapsoFila(Fil,Col):-tabla(Fil,Col,~M),verificarCombinacionColumna(Fil,Col,~M),marcar(Fil,Col).
-marcarColapsoFila(Fil,Col):-Fil<5,NuevaFila is Fil+1,marcarColapsoFila(NuevaFila,Col).
+marcarColapsoFilaDes(Fil,Col):-tabla(Fil,Col,~M),verificarCombinacionColumnaDes(Fil,Col,~M),marcar(Fil,Col).
+marcarColapsoFilaDes(Fil,Col):-Fil<5,NuevaFila is Fil+1,marcarColapsoFilaDes(NuevaFila,Col).
 
-verificarCombinacionColumna(Fil,Col,Marcada):-ColNueva is Col+1,tabla(Fil,ColNueva,Marcada).
-verificarCombinacionColumna(Fil,Col,Marcada):-ColNueva is Col-1,tabla(Fil,ColNueva,Marcada).
+verificarCombinacionColumnaDes(Fil,Col,Marcada):-ColNueva is Col+1,tabla(Fil,ColNueva,Marcada).
+verificarCombinacionColumnaDes(Fil,Col,Marcada):-ColNueva is Col-1,tabla(Fil,ColNueva,Marcada).
 
-marcarColapsoColumna(Fil,Col):-tabla(Fil,Col,~M),verificarCombinacionFila(Fil,Col,~M),marcar(Fil,Col).
-marcarColapsoColumna(Fil,Col):-Col<5,NuevaCol is Col+1,marcarColapsoColumna(Fil,NuevaCol).
+marcarColapsoColumnaDes(Fil,Col):-tabla(Fil,Col,~M),verificarCombinacionFilaDes(Fil,Col,~M),marcar(Fil,Col).
+marcarColapsoColumnaDes(Fil,Col):-Col<5,NuevaCol is Col+1,marcarColapsoColumnaDes(Fil,NuevaCol).
 
-verificarCombinacionFila(Fil,Col,Marcada):-FilNueva is Fil+1,tabla(FilNueva,Col,Marcada).
-verificarCombinacionFila(Fil,Col,Marcada):-FilNueva is Fil-1,tabla(FilNueva,Col,Marcada).
+verificarCombinacionFilaDes(Fil,Col,Marcada):-FilNueva is Fil+1,tabla(FilNueva,Col,Marcada).
+verificarCombinacionFilaDes(Fil,Col,Marcada):-FilNueva is Fil-1,tabla(FilNueva,Col,Marcada).
