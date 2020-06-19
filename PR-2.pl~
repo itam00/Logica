@@ -82,11 +82,17 @@ marcado(~_).
 marcado(/_).
 
 
-marcarColapsoFil(Fil):-marcarColapsoFil(Fil,0).
+marcarColapsoFil(Fil):-marcarColapsoFil(Fil,0,_).
 
-marcarColapsoFil(Fil,Col):-tabla(Fil,Col,~E),marcarCentroFil(Fil,Col,E,1).
-marcarColapsoFil(Fil,Col):-Col<5,Sig is Col+1,marcarColapsoFil(Fil,Sig).
-marcarColapsoFil(_,_).
+marcarColapsoFil(Fil,Col,E):-tabla(Fil,Col,~X),E\=X,marcarCentroFil(Fil,Col,E,1).
+marcarColapsoFil(Fil,Col,_):-Col<4,tabla(Fil,Col,/E),Sig is Col+1,marcarColapsoFil(Fil,Sig,E).
+marcarColapsoFil(Fil,Col,E):-Col<4,Sig is Col+1,marcarColapsoFil(Fil,Sig,E).
+marcarColapsoFil(_,_,_).
+
+% solo se verifica hasta la tercera columna ya que no van a haber
+% combiaciones de 3 si no hay un elemento marcado en la tercera columna
+% Si se encuentra un elemento con marca de colapsar se envia por
+% parametro para evitar agregar otra marca de colapsar
 
 marcarCentroFil(Fil,Col,E,Cant):-Col<6,Sig is Col+1,tabla(Fil,Sig,~E),C is Cant+1,marcarCentroFil(Fil,Sig,E,C).%falla cuando llega al final o encuentra aldo distinto
 marcarCentroFil(Fil,Col,E,_):-tabla(Fil,Col,/E).%si la combiacion ya estaba marcada entonces no se debe marcar el centro
