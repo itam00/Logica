@@ -41,8 +41,10 @@ desplazarFila(F,N):-forall(tabla(F,C,E),(retract(tabla(F,C,E)),NuevaColumna is (
 combinarElementosCol(Col):-forall(member(X,[0,1,2,3,4]),buscarCombFila(X)),buscarCombColumna(Col),marcarColapsoFilaDes(0,Col).
 combinarElementosFil(Fil):-forall(member(X,[0,1,2,3,4]),buscarCombColumna(X)),buscarCombColumna(Fil),marcarColapsoColumnaDes(Fil,0).
 
-%aca falta lo que hace todo en bucle
-
+% aca falta lo que hace todo en bucle, solo hay que recorrer todas las
+% filas y columnas, marcar y dps agregar los colapsar hasta que no se
+% puede eliminar nada
+%
 
 %de aca para abajo es todo para encontrar y marcar combiaciones
 
