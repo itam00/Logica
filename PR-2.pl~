@@ -32,17 +32,19 @@ mover(abajo,Col,N):-desplazarCol(Col,N).
 
 
 
-desplazarCol(C,N):-forall(tabla(F,C,E),(retract(tabla(F,C,E)),NuevaFila is ((N+F) mod 5), assert(tabla(NuevaFila,C,E)))),combinarElementosCol(C),eliminarColapsados.
+desplazarCol(C,N):-forall(tabla(F,C,E),(retract(tabla(F,C,E)),NuevaFila is ((N+F) mod 5), assert(tabla(NuevaFila,C,E)))).%,combinarElementosCol(C),eliminarColapsados.
 
-desplazarFila(F,N):-forall(tabla(F,C,E),(retract(tabla(F,C,E)),NuevaColumna is ((N+C) mod 5), assert(tabla(F,NuevaColumna,E)))),combinarElementosFil(F),eliminarColapsados.
+desplazarFila(F,N):-forall(tabla(F,C,E),(retract(tabla(F,C,E)),NuevaColumna is ((N+C) mod 5), assert(tabla(F,NuevaColumna,E)))).%,combinarElementosFil(F),eliminarColapsados.
 
 
 
-combinarElementosCol(Col):-forall(member(X,[0,1,2,3,4]),buscarCombFila(X)),buscarCombColumna(Col),marcarColapsoFilaDes(0,Col).
-combinarElementosFil(Fil):-forall(member(X,[0,1,2,3,4]),buscarCombColumna(X)),buscarCombColumna(Fil),marcarColapsoColumnaDes(Fil,0).
+combinarElementosCol(Col):-forall(member(X,[0,1,2,3,4]),buscarCombFila(X)),buscarCombColumna(Col),marcarColapsoCol(Col),marcarColapsoFilaDes(0,Col).
+combinarElementosFil(Fil):-forall(member(X,[0,1,2,3,4]),buscarCombColumna(X)),buscarCombFila(Fil),marcarColapsoFil(Fil),marcarColapsoColumnaDes(Fil,0).
 
-%aca falta lo que hace todo en bucle
-
+% aca falta lo que hace todo en bucle, solo hay que recorrer todas las
+% filas y columnas, marcar y dps agregar los colapsar hasta que no se
+% puede eliminar nada
+%
 
 %de aca para abajo es todo para encontrar y marcar combiaciones
 
@@ -123,6 +125,7 @@ marcarColapsoCol(_,_,_).
 marcarCentroCol(Fil,Col,E,Cant):-Fil<6,Sig is Fil+1,tabla(Sig,Col,~E),C is Cant+1,marcarCentroCol(Sig,Col,E,C).%falla cuando llega al final o encuentra aldo distinto
 marcarCentroCol(Fil,Col,E,_):-tabla(Fil,Col,/E).%si la combiacion ya estaba marcada entonces no se debe marcar el centro
 marcarCentroCol(Fil,Col,_,Cant):-Cant>2,Centro is Fil - (Cant//2),marcar(Centro,Col).
+
 
 
 % Recorre las filas fijandose, si el elemento en esa fila y columna esta
