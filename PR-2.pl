@@ -38,8 +38,8 @@ desplazarFila(F,N):-forall(tabla(F,C,E),(retract(tabla(F,C,E)),NuevaColumna is (
 
 
 
-combinarElementosCol(Col):-forall(member(X,[0,1,2,3,4]),buscarCombFila(X)),buscarCombColumna(Col),marcarColapsoCol(Col),marcarColapsoFilaDes(0,Col).
-combinarElementosFil(Fil):-forall(member(X,[0,1,2,3,4]),buscarCombColumna(X)),buscarCombFila(Fil),marcarColapsoFil(Fil),marcarColapsoColumnaDes(Fil,0).
+combinarElementosCol(Col):-forall(member(X,[0,1,2,3,4]),buscarCombFila(X)),buscarCombColumna(Col),marcarColapsoCol(Col),marcarColapsoColumnaDes(0,Col).
+combinarElementosFil(Fil):-forall(member(X,[0,1,2,3,4]),buscarCombColumna(X)),buscarCombFila(Fil),marcarColapsoFil(Fil),marcarColapsoFilaDes(Fil,0).
 
 % aca falta lo que hace todo en bucle, solo hay que recorrer todas las
 % filas y columnas, marcar y dps agregar los colapsar hasta que no se
@@ -50,10 +50,11 @@ combinarElementosFil(Fil):-forall(member(X,[0,1,2,3,4]),buscarCombColumna(X)),bu
 
 eliminarTodo:-forall(tabla(X,Y,Z),retract(tabla(X,Y,Z))).
 
-eliminarColapsados:-forall(tabla(F,C,~Z),(retract(tabla(F,C,~Z)),gravedad(F,C))).
+eliminarColapsados:-forall(tabla(F,C,~Z),(retract(tabla(F,C,~Z)),imprimirTablero,gravedad(F,C))).
 
-gravedad(F,C):-forall((tabla(Fila,C,X),Fila=<F),(retract(tabla(Fila,C,X)),NuevaFila is Fila+1,assert(tabla(NuevaFila,C,X)))),random_member(Random, [a1,v1,r1]),assert(tabla(0,C,Random)).
+gravedad(F,C):-forall((tabla(Fila,C,X),Fila=<F),(retract(tabla(Fila,C,X)),NuevaFila is Fila+1,assert(tabla(NuevaFila,C,X)),writeln(X))),random_member(Random, [a1,v1,r1]),assert(tabla(0,C,x)).
 
+imprimirTablero:-pasarTableroAListas(0,R),writeln(R).
 
 pasarTableroAListas(Fila,[X|Xs]):-tabla(Fila,_,_),pasarFilaALista(Fila,0,X),NuevaFila is Fila+1,pasarTableroAListas(NuevaFila,Xs).
 pasarTableroAListas(_,[]).
@@ -131,14 +132,16 @@ marcarCentroCol(Fil,Col,_,Cant):-Cant>2,Centro is Fil - (Cant//2),marcar(Centro,
 % Recorre las filas fijandose, si el elemento en esa fila y columna esta
 % marcado, si arriba o abajo hay otro elemento marcado, para poner el
 % colapso ahi.
-marcarColapsoFilaDes(Fil,Col):-tabla(Fil,Col,~M),verificarCombinacionColumnaDes(Fil,Col,~M),marcar(Fil,Col).
+marcarColapsoFilaDes(Fil,Col):-tabla(Fil,Col,~M),verificarCombinacionFilaDes(Fil,Col,~M),marcar(Fil,Col).
 marcarColapsoFilaDes(Fil,Col):-Fil<5,NuevaFila is Fil+1,marcarColapsoFilaDes(NuevaFila,Col).
+marcarColapsoFilaDes(_,_).
 
 verificarCombinacionColumnaDes(Fil,Col,Marcada):-ColNueva is Col+1,tabla(Fil,ColNueva,Marcada).
 verificarCombinacionColumnaDes(Fil,Col,Marcada):-ColNueva is Col-1,tabla(Fil,ColNueva,Marcada).
 
-marcarColapsoColumnaDes(Fil,Col):-tabla(Fil,Col,~M),verificarCombinacionFilaDes(Fil,Col,~M),marcar(Fil,Col).
+marcarColapsoColumnaDes(Fil,Col):-tabla(Fil,Col,~M),verificarCombinacionColumnaDes(Fil,Col,~M),marcar(Fil,Col).
 marcarColapsoColumnaDes(Fil,Col):-Col<5,NuevaCol is Col+1,marcarColapsoColumnaDes(Fil,NuevaCol).
+marcarColapsoColumnaDes(_,_).
 
 verificarCombinacionFilaDes(Fil,Col,Marcada):-FilNueva is Fil+1,tabla(FilNueva,Col,Marcada).
 verificarCombinacionFilaDes(Fil,Col,Marcada):-FilNueva is Fil-1,tabla(FilNueva,Col,Marcada).
