@@ -142,14 +142,14 @@ marcarCentroCol(Fil,Col,_,Cant):-Cant>2,Centro is Fil - (Cant//2),marcar(Centro,
 % marcado, si arriba o abajo hay otro elemento marcado, para poner el
 % colapso ahi.
 marcarColapsoFilaDes(Fil,Col):-tabla(Fil,Col,~M),verificarCombinacionFilaDes(Fil,Col,~M),marcar(Fil,Col).
-marcarColapsoFilaDes(Fil,Col):-Fil<5,NuevaFila is Fil+1,marcarColapsoFilaDes(NuevaFila,Col).
+marcarColapsoFilaDes(Fil,Col):-Col<5,NuevaCol is Col+1,marcarColapsoFilaDes(Fil,NuevaCol).
 marcarColapsoFilaDes(_,_).
 
 verificarCombinacionColumnaDes(Fil,Col,Marcada):-ColNueva is Col+1,tabla(Fil,ColNueva,Marcada).
 verificarCombinacionColumnaDes(Fil,Col,Marcada):-ColNueva is Col-1,tabla(Fil,ColNueva,Marcada).
 
 marcarColapsoColumnaDes(Fil,Col):-tabla(Fil,Col,~M),verificarCombinacionColumnaDes(Fil,Col,~M),marcar(Fil,Col).
-marcarColapsoColumnaDes(Fil,Col):-Col<5,NuevaCol is Col+1,marcarColapsoColumnaDes(Fil,NuevaCol).
+marcarColapsoColumnaDes(Fil,Col):-Fil<5,NuevaFil is Fil+1,marcarColapsoColumnaDes(NuevaFil,Col).
 marcarColapsoColumnaDes(_,_).
 
 verificarCombinacionFilaDes(Fil,Col,Marcada):-FilNueva is Fil+1,tabla(FilNueva,Col,Marcada).
