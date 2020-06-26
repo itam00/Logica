@@ -66,7 +66,9 @@ pasarTableroAListas(Fila,[X|Xs]):-tabla(Fila,_,_),pasarFilaALista(Fila,0,X),Nuev
 pasarTableroAListas(_,[]).
 
 %pasarFilaALista(+Fila,-Res)
+pasarFilaALista(Fila,Col,[x|Xs]):-tabla(Fila,Col,~_),NuevaCol is Col+1,pasarFilaALista(Fila,NuevaCol,Xs).
 pasarFilaALista(Fila,Col,[X|Xs]):-tabla(Fila,Col,X),NuevaCol is Col+1,pasarFilaALista(Fila,NuevaCol,Xs).
+
 pasarFilaALista(_,_,[]).
 
 
