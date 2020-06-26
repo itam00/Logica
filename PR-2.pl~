@@ -32,14 +32,13 @@ mover(abajo,Col,N):-desplazarCol(Col,N).
 
 
 
-desplazarCol(C,N):-forall(tabla(F,C,E),(retract(tabla(F,C,E)),NuevaFila is ((N+F) mod 5), assert(tabla(NuevaFila,C,E)))),combinarElementosCol(C).%,eliminarColapsados.
+desplazarCol(C,N):-forall(tabla(F,C,E),(retract(tabla(F,C,E)),NuevaFila is ((N+F) mod 5), assert(tabla(NuevaFila,C,E)))),combinarElementosCol(C),eliminarColapsados.
 
-desplazarFila(F,N):-forall(tabla(F,C,E),(retract(tabla(F,C,E)),NuevaColumna is ((N+C) mod 5), assert(tabla(F,NuevaColumna,E)))),cantElem,combinarElementosFil(F).%,eliminarColapsados.
-
+desplazarFila(F,N):-forall(tabla(F,C,E),(retract(tabla(F,C,E)),NuevaColumna is ((N+C) mod 5), assert(tabla(F,NuevaColumna,E)))),combinarElementosFil(F),eliminarColapsados.
 cantElem:-forall(tabla(_,_,Z),writeln(Z)).
 
 combinarElementosCol(Col):-forall(member(X,[0,1,2,3,4]),buscarCombFila(X)),buscarCombColumna(Col),marcarColapsoColumnaDes(0,Col),marcarColapsoCol(Col).
-combinarElementosFil(Fil):-forall(member(X,[0,1,2,3,4]),buscarCombColumna(X)),buscarCombFila(Fil),writeln(Fil),marcarColapsoFilaDes(Fil,0),marcarColapsoFil(Fil).
+combinarElementosFil(Fil):-forall(member(X,[0,1,2,3,4]),buscarCombColumna(X)),buscarCombFila(Fil),marcarColapsoFilaDes(Fil,0),marcarColapsoFil(Fil).
 
 % aca falta lo que hace todo en bucle, solo hay que recorrer todas las
 % filas y columnas, marcar y dps agregar los colapsar hasta que no se
