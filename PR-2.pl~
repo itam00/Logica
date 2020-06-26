@@ -2,6 +2,7 @@
 
 :- op(300,fx,~). %operador que marca que un elemento debe aumentar su tamaño
 :- dynamic tabla/3.
+:- dynamic evol/1.
 
 desplazar(Dir,Num,Cant,Tablero,_EvolTablero):- guardarTablero(Tablero),Desplazamiento is Num-1,mover(Dir,Desplazamiento,Cant).
 
@@ -26,9 +27,9 @@ imprimir(X,Y,Z):-write(' La fila es: '),write(X),write(' La columna es: '),write
 %realiza el desplazamiento correspondiente sobre el tablero almacenado
 
 mover(izq,Fila,N):-X is 5-N,desplazarFila(Fila,X).
-mover(der,Fila,N):- desplazarFila(Fila,N).
-mover(arriba,Col,N):-X is 5-N,desplazarCol(Col,X).
-mover(abajo,Col,N):-desplazarCol(Col,N).
+mover(der,Fila,N):- desplazarFila(Fila,N).%,eliminarColapsadosAux,bucleCombinacionesAux.
+mover(arriba,Col,N):-X is 5-N,desplazarCol(Col,X).%,eliminarColapsadosAux,bucleCombinacionesAux.
+mover(abajo,Col,N):-desplazarCol(Col,N).%,eliminarColapsadosAux,bucleCombinacionesAux.
 
 
 
@@ -40,6 +41,11 @@ cantElem:-forall(tabla(_,_,Z),writeln(Z)).
 combinarElementosCol(Col):-forall(member(X,[0,1,2,3,4]),buscarCombFila(X)),buscarCombColumna(Col),marcarColapsoColumnaDes(0,Col),marcarColapsoCol(Col).
 combinarElementosFil(Fil):-forall(member(X,[0,1,2,3,4]),buscarCombColumna(X)),buscarCombFila(Fil),marcarColapsoFilaDes(Fil,0),marcarColapsoFil(Fil).
 
+bucleCombinacionesAux:-imprimirTablero,pasarTableroAListas(0,TableroViejo),bucleCombinaciones,pasarTableroAListas(0,TableroNuevo),TableroNuevo\=TableroViejo.
+bucleCombinacionesAux.
+
+bucleCombinaciones:-forall(member(X,[0,1,2,3,4]),(buscarCombFila(X),buscarCombColumna(X),marcarColapsoFil(X),marcarColapsoCol(X))),eliminarColapsadosAux.
+
 % aca falta lo que hace todo en bucle, solo hay que recorrer todas las
 % filas y columnas, marcar y dps agregar los colapsar hasta que no se
 % puede eliminar nada
@@ -50,7 +56,7 @@ combinarElementosFil(Fil):-forall(member(X,[0,1,2,3,4]),buscarCombColumna(X)),bu
 eliminarTodo:-forall(tabla(X,Y,Z),retract(tabla(X,Y,Z))).
 
 eliminarColapsadosAux:-eliminarColapsados,eliminarColapsadosAux.
-eliminarColapsadosAux.
+eliminarColapsadosAux:-agrandarColapsados.
 
 eliminarColapsados:-tabla(F,C,~Z),retract(tabla(F,C,~Z)),gravedad(F,C).
 
@@ -119,7 +125,7 @@ marcarCentroFil(Fil,Col,_,Cant):-Cant>2,Centro is Col - (Cant//2),marcar(Fil,Cen
 % NO PARA EL CASO DEL BUCLE
 
 
-marcarColapsoCol(Fil):-marcarColapsoCol(Fil,0,x). %x puede ser cualquier elemento lo importante es q sea distinto a todas las muñecas del tablero
+marcarColapsoCol(Col):-marcarColapsoCol(0,Col,x). %x puede ser cualquier elemento lo importante es q sea distinto a todas las muñecas del tablero
 
 marcarColapsoCol(Fil,Col,E):-tabla(Fil,Col,~X),E\=X,marcarCentroCol(Fil,Col,X,1).
 marcarColapsoCol(Fil,Col,_):-Fil<4,tabla(Fil,Col,/E),Sig is Fil+1,marcarColapsoCol(Sig,Col,E).
@@ -141,18 +147,31 @@ marcarCentroCol(Fil,Col,_,Cant):-Cant>2,Centro is Fil - (Cant//2),marcar(Centro,
 % Recorre las filas fijandose, si el elemento en esa fila y columna esta
 % marcado, si arriba o abajo hay otro elemento marcado, para poner el
 % colapso ahi.
-marcarColapsoFilaDes(Fil,Col):-tabla(Fil,Col,~M),verificarCombinacionFilaDes(Fil,Col,~M),marcar(Fil,Col).
+marcarColapsoFilaDes(Fil,Col):-tabla(Fil,Col,~M),verificarCombinacionFilaDes(Fil,Col,~M),marcar(Fil,Col),marcarColapsoFilaDes(Fil,Col).
 marcarColapsoFilaDes(Fil,Col):-Col<5,NuevaCol is Col+1,marcarColapsoFilaDes(Fil,NuevaCol).
 marcarColapsoFilaDes(_,_).
 
 verificarCombinacionColumnaDes(Fil,Col,Marcada):-ColNueva is Col+1,tabla(Fil,ColNueva,Marcada).
 verificarCombinacionColumnaDes(Fil,Col,Marcada):-ColNueva is Col-1,tabla(Fil,ColNueva,Marcada).
 
-marcarColapsoColumnaDes(Fil,Col):-tabla(Fil,Col,~M),verificarCombinacionColumnaDes(Fil,Col,~M),marcar(Fil,Col).
-marcarColapsoColumnaDes(Fil,Col):-Fil<5,NuevaFil is Fil+1,marcarColapsoColumnaDes(NuevaFil,Col).
+
+marcarColapsoColumnaDes(Fil,Col):-tabla(Fil,Col,~M),verificarCombinacionColumnaDes(Fil,Col,~M),marcar(Fil,Col),marcarColapsoColumnaDes(Fil,Col).
+marcarColapsoColumnaDes(Fil,Col):-Fil<5,NuevaFil is Fil+1,marcarColapsoColumnaDes(NuevaFil,Col),imprimirTablero.
 marcarColapsoColumnaDes(_,_).
 
 verificarCombinacionFilaDes(Fil,Col,Marcada):-FilNueva is Fil+1,tabla(FilNueva,Col,Marcada).
 verificarCombinacionFilaDes(Fil,Col,Marcada):-FilNueva is Fil-1,tabla(FilNueva,Col,Marcada).
 
+agrandarColapsados:-forall(tabla(F,C,/M),(retract(tabla(F,C,/M)),agrandar(M,MGrande),assert(tabla(F,C,MGrande)))).
+agrandarColapsados.
+
+agrandar(a1,a2).
+agrandar(a2,a3).
+agrandar(v1,v2).
+agrandar(v2,v3).
+agrandar(r1,r2).
+agrandar(r2,r3).
+agrandar(M,M).
+
+guardarEvol(L):-assertz(evol(L)).
 
