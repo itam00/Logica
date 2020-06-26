@@ -39,7 +39,7 @@ desplazarFila(F,N):-forall(tabla(F,C,E),(retract(tabla(F,C,E)),NuevaColumna is (
 cantElem:-forall(tabla(_,_,Z),writeln(Z)).
 
 combinarElementosCol(Col):-forall(member(X,[0,1,2,3,4]),buscarCombFila(X)),buscarCombColumna(Col),marcarColapsoColumnaDes(0,Col),marcarColapsoCol(Col).
-combinarElementosFil(Fil):-forall(member(X,[0,1,2,3,4]),buscarCombColumna(X)),buscarCombFila(Fil),writeln(Fil),marcarColapsoFilaDes(Fil,0),marcarColapsoFil(Fil).
+combinarElementosFil(Fil):-forall(member(X,[0,1,2,3,4]),buscarCombColumna(X)),buscarCombFila(Fil),marcarColapsoFilaDes(Fil,0),marcarColapsoFil(Fil).
 
 % aca falta lo que hace todo en bucle, solo hay que recorrer todas las
 % filas y columnas, marcar y dps agregar los colapsar hasta que no se
@@ -50,7 +50,14 @@ combinarElementosFil(Fil):-forall(member(X,[0,1,2,3,4]),buscarCombColumna(X)),bu
 
 eliminarTodo:-forall(tabla(X,Y,Z),retract(tabla(X,Y,Z))).
 
-eliminarColapsados:-forall(tabla(F,C,~Z),(retract(tabla(F,C,~Z)),imprimirTablero,gravedad(F,C))).
+eliminarColapsadosAux:-eliminarColapsados,eliminarColapsadosAux.
+eliminarColapsadosAux.
+
+eliminarColapsados:-tabla(F,C,~Z),retract(tabla(F,C,~Z)),gravedad(F,C).
+
+
+% eliminarColapsados:-forall(tabla(F,C,~Z),(retract(tabla(F,C,~Z)),imprimirTablero,gravedad(F,C))).
+%
 
 gravedad(F,C):-forall((tabla(Fila,C,X),Fila=<F),(retract(tabla(Fila,C,X)),NuevaFila is Fila+1,assert(tabla(NuevaFila,C,X)),writeln(X))),random_member(Random, [a1,v1,r1]),assert(tabla(0,C,x)).
 

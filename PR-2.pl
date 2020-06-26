@@ -50,9 +50,16 @@ combinarElementosFil(Fil):-forall(member(X,[0,1,2,3,4]),buscarCombColumna(X)),bu
 
 eliminarTodo:-forall(tabla(X,Y,Z),retract(tabla(X,Y,Z))).
 
-eliminarColapsados:-forall(tabla(F,C,~Z),(retract(tabla(F,C,~Z)),imprimirTablero,gravedad(F,C))).
+eliminarColapsadosAux:-eliminarColapsados,eliminarColapsadosAux.
+eliminarColapsadosAux.
 
-gravedad(F,C):-forall((tabla(Fila,C,X),Fila=<F),(retract(tabla(Fila,C,X)),NuevaFila is Fila+1,assert(tabla(NuevaFila,C,X)),writeln(X))),random_member(Random, [a1,v1,r1]),assert(tabla(0,C,x)).
+eliminarColapsados:-tabla(F,C,~Z),retract(tabla(F,C,~Z)),gravedad(F,C).
+
+
+% eliminarColapsados:-forall(tabla(F,C,~Z),(retract(tabla(F,C,~Z)),imprimirTablero,gravedad(F,C))).
+%
+
+gravedad(F,C):-forall((tabla(Fila,C,X),Fila=<F),(retract(tabla(Fila,C,X)),NuevaFila is Fila+1,assert(tabla(NuevaFila,C,X)),writeln(X))),random_member(Random, [a1,v1,r1]),assert(tabla(0,C,Random)).
 
 imprimirTablero:-pasarTableroAListas(0,R),writeln(R).
 
