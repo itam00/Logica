@@ -8,6 +8,11 @@
 
 desplazar(Dir,Num,Cant,Tablero,EvolTablero):- guardarTablero(Tablero),Desplazamiento is Num-1,mover(Dir,Desplazamiento,Cant),recuperarTableros(EvolTablero),writeln(' '),imprimirTablero,eliminarTodo.%bucleCombinacionesAux.
 
+% recuperarTableros/1
+% Mete en una lista todos los tableros guardados en forma de hechos
+% evol(Tablero) y luegos los elimina (usando
+% retract), y devuelve esta lista.
+% recuperarTableros(-Lista).
 recuperarTableros(Lista):-findall(Tablero,evol(Tablero),Lista),forall(evol(X),retract(evol(X))).
 
 % guardarTablero (+Tablero).
@@ -16,20 +21,38 @@ recuperarTableros(Lista):-findall(Tablero,evol(Tablero),Lista),forall(evol(X),re
 % la primer fila en pasarse a hechos es la numero 0.
 guardarTablero(Tablero):-pasarAHechos(Tablero,0).
 
+
+
+% pasarAHechos/2
+% pasarAHechos(+ListaDeFilas,+NumFila).
+% pasa cada fila dentro de la lista de filas a hechos, empezando por la
+% fila NumFila.
 pasarAHechos([],_).
 pasarAHechos([FilaActual|Filas],NumFila):-pasarFila(FilaActual,NumFila,0),SigFila is (NumFila+1),pasarAHechos(Filas,SigFila).
 
+% pasarFila/3
+% pasarFila(+Fila,+NumFila,NumColumna)
+% pasarFila(Fila,NumFila,NumColumna)
+% pasa cada elemento de la fila a hechos, indicando el numero de fila y
+% numero de columna donde se encuentra el elemento.
 pasarFila([],_,_).
 pasarFila([Elem1|Elementos],NumFila,NumColumna):-pasarElemento(Elem1,NumFila,NumColumna),SigColumna is (NumColumna+1),pasarFila(Elementos,NumFila,SigColumna).
 
+% pasarElemento/3
+% pasarElemento(+Elemento,+NumFila,+NumColumna).
+% pasa el elemento en la fila NumFila y columna NumColumna a un hecho
+% tabla(Elemento,NumFila,NumColumna)
 pasarElemento(Elemento,NumFila,NumColumna):-assert(tabla(NumFila,NumColumna,Elemento)).
 
 pasar:-forall(tabla(X,Y,Z),imprimir(X,Y,Z)).
 
 imprimir(X,Y,Z):-write(' La fila es: '),write(X),write(' La columna es: '),write(Y),write(' La muñeca es:'),writeln(Z).
 
-%realiza el desplazamiento correspondiente sobre el tablero almacenado
-
+% mover/3
+% realiza el desplazamiento correspondiente sobre el tablero almacenado
+% mueve la fila o columna pasada por parametr en la direccion indicada N
+% lugares
+% mover(+Direccion,+(Fila o columna),+Cantidad)
 mover(izq,Fila,N):-X is 5-N,desplazarFila(Fila,X).
 mover(der,Fila,N):- desplazarFila(Fila,N).%,eliminarColapsadosAux,bucleCombinacionesAux.
 mover(arriba,Col,N):-X is 5-N,desplazarCol(Col,X).%,eliminarColapsadosAux,bucleCombinacionesAux.
@@ -56,30 +79,60 @@ bucleCombinaciones:-forall(member(X,[0,1,2,3,4]),(buscarCombFila(X),buscarCombCo
 
 %de aca para abajo es todo para encontrar y marcar combiaciones
 
+
+% eliminarTodo/0
+% elimina todos los hechos tabla/3
 eliminarTodo:-forall(tabla(X,Y,Z),retract(tabla(X,Y,Z))).
 
+% eliminarColapsadosAux/0
+% Elimina todos los elementos del tablero marcados con ~ y guarda el
+% tablero resultante después de haberlos eliminado todos.
 eliminarColapsadosAux:-eliminarColapsados,eliminarColapsadosAux.
 eliminarColapsadosAux:-guardarEvol.%,reemplazarPorRandom,guardarEvol.
 
+
+% eliminarColapsados/0
+% elimina un elemento del tablero marcado con ~ y aplica gravedad para
+% que los elementos que habia arriba de el caigan tapando el lugar
+% "vacio" resultado de eliminarlo.
 eliminarColapsados:-tabla(F,C,~Z),retract(tabla(F,C,~Z)),gravedad(F,C).
 
 
 % eliminarColapsados:-forall(tabla(F,C,~Z),(retract(tabla(F,C,~Z)),imprimirTablero,gravedad(F,C))).
 %
 
+% gravedad/2
+% gravedad(+F,+C).
+% mueve todos los elementos arriba de una fila y columna pasados por
+% parametro una fila para abajo, ya que el elemento que antes se
+% encontraba en esa fila y columna fue eliminado. A demás agrega una x
+% (que representa un lugar vacio), en la parte mas alta de la columna ya
+% que ese lugar debe ser rellenado con un nuevo elemento)
 gravedad(F,C):-forall((tabla(Fila,C,X),Fila=<F),(retract(tabla(Fila,C,X)),NuevaFila is Fila+1,assert(tabla(NuevaFila,C,X)),writeln(X))),assert(tabla(0,C,x)).
 
 reemplazarPorRandom:-forall(tabla(X,Y,x),(retract(tabla(X,Y,x)),random_member(Random, [a1,v1,r1]),assert(tabla(X,Y,Random)))).
 
+% imprimirTablero/0
+% Muestra el tablero actual en formato lista de listas.
 imprimirTablero:-pasarTableroAListas(0,R),writeln(R).
 
+% pasarTableroAListas/2
+% pasarTableroAListas(+Fila,-Lista)
+% Devuelve una Lista de Listas en Lista que representa el tablero
+% actual, donde cada sublista es una fila que contiene los elementos del
+% tablero ubicados en esa fila y ordenados por columna (el primer
+% elemento está en la columna 1, el segundo en la 2 y así
+% sucesivamente).
 pasarTableroAListas(Fila,[X|Xs]):-tabla(Fila,_,_),pasarFilaALista(Fila,0,X),NuevaFila is Fila+1,pasarTableroAListas(NuevaFila,Xs).
 pasarTableroAListas(_,[]):-!.
 
-%pasarFilaALista(+Fila,-Res)
+% pasarFilaALista/3
+% pasarFilaALista(+Fila,+Col,-Res)
+% pasa una fila a una lista de elementos, ordenados por columna (el
+% primer elemento está en la columna 1, el segundo en la 2, y así
+% sucesivamente).
 pasarFilaALista(Fila,Col,[x|Xs]):-tabla(Fila,Col,~_),NuevaCol is Col+1,pasarFilaALista(Fila,NuevaCol,Xs).
 pasarFilaALista(Fila,Col,[X|Xs]):-tabla(Fila,Col,X),NuevaCol is Col+1,pasarFilaALista(Fila,NuevaCol,Xs).
-
 pasarFilaALista(_,_,[]).
 
 
