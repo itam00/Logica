@@ -6,9 +6,9 @@
 :- dynamic evol/1.
 
 
-desplazar(Dir,Num,Cant,Tablero,_EvolTablero):- guardarTablero(Tablero),Desplazamiento is Num-1,mover(Dir,Desplazamiento,Cant),recuperarTableros(_EvolTablero),bucleCombinacionesAux.
+desplazar(Dir,Num,Cant,Tablero,EvolTablero):- guardarTablero(Tablero),Desplazamiento is Num-1,mover(Dir,Desplazamiento,Cant),recuperarTableros(EvolTablero),writeln(' '),imprimirTablero,eliminarTodo.%bucleCombinacionesAux.
 
-recuperarTableros(Lista):-findall(Tablero,evol(Tablero),Lista).
+recuperarTableros(Lista):-findall(Tablero,evol(Tablero),Lista),forall(evol(X),retract(evol(X))).
 
 % guardarTablero (+Tablero).
 % guarda todos los elementos de la lista como predicados de la forma
@@ -44,8 +44,8 @@ cantElem:-forall(tabla(_,_,Z),writeln(Z)).
 combinarElementosCol(Col):-forall(member(X,[0,1,2,3,4]),buscarCombFila(X)),buscarCombColumna(Col),marcarColapsoColumnaDes(0,Col),marcarColapsoCol(Col),agrandarColapsados,guardarEvol,eliminarColapsadosAux.
 combinarElementosFil(Fil):-forall(member(X,[0,1,2,3,4]),buscarCombColumna(X)),buscarCombFila(Fil),marcarColapsoFilaDes(Fil,0),marcarColapsoFil(Fil),agrandarColapsados,guardarEvol,eliminarColapsadosAux.
 
-bucleCombinacionesAux:-imprimirTablero,pasarTableroAListas(0,TableroViejo),bucleCombinaciones,pasarTableroAListas(0,TableroNuevo),TableroNuevo\=TableroViejo,bucleCombinacionesAux.
-bucleCombinacionesAux.
+bucleCombinacionesAux(TableroViejo):-pasarTableroAListas(0,TableroNuevo),TableroViejo=TableroNuevo.
+bucleCombinacionesAux(_):-imprimirTablero,bucleCombinaciones,pasarTableroAListas(0,TableroNuevo),bucleCombinacionesAux(TableroNuevo).
 
 bucleCombinaciones:-forall(member(X,[0,1,2,3,4]),(buscarCombFila(X),buscarCombColumna(X),marcarColapsoFil(X),marcarColapsoCol(X))),eliminarColapsadosAux.
 
@@ -74,7 +74,7 @@ reemplazarPorRandom:-forall(tabla(X,Y,x),(retract(tabla(X,Y,x)),random_member(Ra
 imprimirTablero:-pasarTableroAListas(0,R),writeln(R).
 
 pasarTableroAListas(Fila,[X|Xs]):-tabla(Fila,_,_),pasarFilaALista(Fila,0,X),NuevaFila is Fila+1,pasarTableroAListas(NuevaFila,Xs).
-pasarTableroAListas(_,[]).
+pasarTableroAListas(_,[]):-!.
 
 %pasarFilaALista(+Fila,-Res)
 pasarFilaALista(Fila,Col,[x|Xs]):-tabla(Fila,Col,~_),NuevaCol is Col+1,pasarFilaALista(Fila,NuevaCol,Xs).
@@ -180,4 +180,6 @@ agrandar(r2,r3).
 agrandar(M,M).
 
 guardarEvol:-pasarTableroAListas(0,Tablero),assertz(evol(Tablero)).
+
+generarRandom:-guardarTablero([[x,x,x,x,x],[x,x,x,x,x],[x,x,x,x,x],[x,x,x,x,x],[x,x,x,x,x]]),reemplazarPorRandom.
 
