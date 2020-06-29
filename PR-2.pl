@@ -1,12 +1,10 @@
 :- op(300,fx,/). %operador que marca que un elemento debe ser eliminado
-
 :- op(300,fx,~). %operador que marca que un elemento debe aumentar su tamaño
-
 :- dynamic tabla/3.
 :- dynamic evol/1.
 
 
-desplazar(Dir,Num,Cant,Tablero,EvolTablero):- guardarTablero(Tablero),Desplazamiento is Num-1,mover(Dir,Desplazamiento,Cant),recuperarTableros(EvolTablero),writeln(' '),imprimirTablero,eliminarTodo.%bucleCombinacionesAux.
+desplazar(Dir,Num,Cant,Tablero,EvolTablero):- guardarTablero(Tablero),Desplazamiento is Num-1,mover(Dir,Desplazamiento,Cant),guardarEvol,eliminarColapsadosAux,guardarEvol,reemplazarPorRandom,writeln(' '),bucleCombinacionesAux,recuperarTableros(EvolTablero),eliminarTodo.
 
 % recuperarTableros/1
 % Mete en una lista todos los tableros guardados en forma de hechos
@@ -44,33 +42,32 @@ pasarFila([Elem1|Elementos],NumFila,NumColumna):-pasarElemento(Elem1,NumFila,Num
 % tabla(Elemento,NumFila,NumColumna)
 pasarElemento(Elemento,NumFila,NumColumna):-assert(tabla(NumFila,NumColumna,Elemento)).
 
-pasar:-forall(tabla(X,Y,Z),imprimir(X,Y,Z)).
-
-imprimir(X,Y,Z):-write(' La fila es: '),write(X),write(' La columna es: '),write(Y),write(' La muñeca es:'),writeln(Z).
-
 % mover/3
 % realiza el desplazamiento correspondiente sobre el tablero almacenado
 % mueve la fila o columna pasada por parametr en la direccion indicada N
 % lugares
 % mover(+Direccion,+(Fila o columna),+Cantidad)
 mover(izq,Fila,N):-X is 5-N,desplazarFila(Fila,X).
-mover(der,Fila,N):- desplazarFila(Fila,N).%,eliminarColapsadosAux,bucleCombinacionesAux.
-mover(arriba,Col,N):-X is 5-N,desplazarCol(Col,X).%,eliminarColapsadosAux,bucleCombinacionesAux.
-mover(abajo,Col,N):-desplazarCol(Col,N).%,eliminarColapsadosAux,bucleCombinacionesAux.
+mover(der,Fila,N):- desplazarFila(Fila,N).
+mover(arriba,Col,N):-X is 5-N,desplazarCol(Col,X).
+mover(abajo,Col,N):-desplazarCol(Col,N).
 
 
 
 desplazarCol(C,N):-forall(tabla(F,C,E),(retract(tabla(F,C,E)),NuevaFila is ((N+F) mod 5), assert(tabla(NuevaFila,C,E)))),guardarEvol,combinarElementosCol(C).
 desplazarFila(F,N):-forall(tabla(F,C,E),(retract(tabla(F,C,E)),NuevaColumna is ((N+C) mod 5), assert(tabla(F,NuevaColumna,E)))),guardarEvol,combinarElementosFil(F).
-cantElem:-forall(tabla(_,_,Z),writeln(Z)).
 
-combinarElementosCol(Col):-forall(member(X,[0,1,2,3,4]),buscarCombFila(X)),buscarCombColumna(Col),marcarColapsoColumnaDes(0,Col),marcarColapsoCol(Col),agrandarColapsados,guardarEvol,eliminarColapsadosAux.
-combinarElementosFil(Fil):-forall(member(X,[0,1,2,3,4]),buscarCombColumna(X)),buscarCombFila(Fil),marcarColapsoFilaDes(Fil,0),marcarColapsoFil(Fil),agrandarColapsados,guardarEvol,eliminarColapsadosAux.
+combinarElementosCol(Col):-forall(member(X,[0,1,2,3,4]),buscarCombFila(X)),buscarCombColumna(Col),marcarColapsoColumnaDes(0,Col),marcarColapsoCol(Col),agrandarColapsados.%,guardarEvol,eliminarColapsadosAux.
+combinarElementosFil(Fil):-forall(member(X,[0,1,2,3,4]),buscarCombColumna(X)),buscarCombFila(Fil),marcarColapsoFilaDes(Fil,0),marcarColapsoFil(Fil),agrandarColapsados.%,guardarEvol,eliminarColapsadosAux.
 
-bucleCombinacionesAux(TableroViejo):-pasarTableroAListas(0,TableroNuevo),TableroViejo=TableroNuevo.
-bucleCombinacionesAux(_):-imprimirTablero,bucleCombinaciones,pasarTableroAListas(0,TableroNuevo),bucleCombinacionesAux(TableroNuevo).
+%bucleCombinacionesAux(Viejo):-pasarTableroAListas(0,Nuevo),Viejo=Nuevo.
+%bucleCombinacionesAux(_):-pasarTableroAListas(0,Nuevo),bucleCombinaciones,bucleCombinacionesAux(Nuevo).
 
-bucleCombinaciones:-forall(member(X,[0,1,2,3,4]),(buscarCombFila(X),buscarCombColumna(X),marcarColapsoFil(X),marcarColapsoCol(X))),eliminarColapsadosAux.
+bucleCombinacionesAux:-pasarTableroAListas(0,TableroViejo),bucleCombinaciones,pasarTableroAListas(0,TableroNuevo),TableroViejo\=TableroNuevo,bucleCombinacionesAux.
+bucleCombinacionesAux:-guardarEvol.
+
+
+bucleCombinaciones:-forall(member(X,[0,1,2,3,4]),(buscarCombFila(X),buscarCombColumna(X))),forall(member(X,[0,1,2,3,4]),(marcarColapsoFil(X),marcarColapsoCol(X))),guardarEvol,eliminarColapsadosAux,guardarEvol,reemplazarPorRandom,agrandarColapsados.
 
 % aca falta lo que hace todo en bucle, solo hay que recorrer todas las
 % filas y columnas, marcar y dps agregar los colapsar hasta que no se
@@ -88,7 +85,7 @@ eliminarTodo:-forall(tabla(X,Y,Z),retract(tabla(X,Y,Z))).
 % Elimina todos los elementos del tablero marcados con ~ y guarda el
 % tablero resultante después de haberlos eliminado todos.
 eliminarColapsadosAux:-eliminarColapsados,eliminarColapsadosAux.
-eliminarColapsadosAux:-guardarEvol.%,reemplazarPorRandom,guardarEvol.
+eliminarColapsadosAux.%:-guardarEvol,reemplazarPorRandom,guardarEvol.
 
 
 % eliminarColapsados/0
@@ -108,7 +105,7 @@ eliminarColapsados:-tabla(F,C,~Z),retract(tabla(F,C,~Z)),gravedad(F,C).
 % encontraba en esa fila y columna fue eliminado. A demás agrega una x
 % (que representa un lugar vacio), en la parte mas alta de la columna ya
 % que ese lugar debe ser rellenado con un nuevo elemento)
-gravedad(F,C):-forall((tabla(Fila,C,X),Fila=<F),(retract(tabla(Fila,C,X)),NuevaFila is Fila+1,assert(tabla(NuevaFila,C,X)),writeln(X))),assert(tabla(0,C,x)).
+gravedad(F,C):-forall((tabla(Fila,C,X),Fila=<F),(retract(tabla(Fila,C,X)),NuevaFila is Fila+1,assert(tabla(NuevaFila,C,X)))),assert(tabla(0,C,x)).
 
 reemplazarPorRandom:-forall(tabla(X,Y,x),(retract(tabla(X,Y,x)),random_member(Random, [a1,v1,r1]),assert(tabla(X,Y,Random)))).
 
@@ -123,8 +120,8 @@ imprimirTablero:-pasarTableroAListas(0,R),writeln(R).
 % tablero ubicados en esa fila y ordenados por columna (el primer
 % elemento está en la columna 1, el segundo en la 2 y así
 % sucesivamente).
-pasarTableroAListas(Fila,[X|Xs]):-tabla(Fila,_,_),pasarFilaALista(Fila,0,X),NuevaFila is Fila+1,pasarTableroAListas(NuevaFila,Xs).
-pasarTableroAListas(_,[]):-!.
+pasarTableroAListas(Fila,[X|Xs]):-tabla(Fila,_,_),pasarFilaALista(Fila,0,X),NuevaFila is Fila+1,pasarTableroAListas(NuevaFila,Xs),!.
+pasarTableroAListas(_,[]).
 
 % pasarFilaALista/3
 % pasarFilaALista(+Fila,+Col,-Res)
@@ -169,8 +166,8 @@ marcado(/_).
 marcarColapsoFil(Fil):-marcarColapsoFil(Fil,0,x). %x puede ser cualquier elemento lo importante es q sea distinto a todas las muñecas del tablero
 
 marcarColapsoFil(Fil,Col,E):-tabla(Fil,Col,~X),E\=X,marcarCentroFil(Fil,Col,X,1).
-marcarColapsoFil(Fil,Col,_):-Col<4,tabla(Fil,Col,/E),Sig is Col+1,marcarColapsoFil(Fil,Sig,E).
-marcarColapsoFil(Fil,Col,E):-Col<4,Sig is Col+1,marcarColapsoFil(Fil,Sig,E).
+marcarColapsoFil(Fil,Col,_):-Col<3,tabla(Fil,Col,/E),Sig is Col+1,marcarColapsoFil(Fil,Sig,E).
+marcarColapsoFil(Fil,Col,E):-Col<3,Sig is Col+1,marcarColapsoFil(Fil,Sig,E).
 marcarColapsoFil(_,_,_).
 
 % solo se verifica hasta la tercera columna ya que no van a haber
@@ -178,7 +175,7 @@ marcarColapsoFil(_,_,_).
 % Si se encuentra un elemento con marca de colapsar se envia por
 % parametro para evitar agregar otra marca de colapsar
 
-marcarCentroFil(Fil,Col,E,Cant):-Col<6,Sig is Col+1,tabla(Fil,Sig,~E),C is Cant+1,marcarCentroFil(Fil,Sig,E,C).%falla cuando llega al final o encuentra aldo distinto
+marcarCentroFil(Fil,Col,E,Cant):-Col<5,Sig is Col+1,tabla(Fil,Sig,~E),C is Cant+1,marcarCentroFil(Fil,Sig,E,C).%falla cuando llega al final o encuentra aldo distinto
 marcarCentroFil(Fil,Col,E,_):-tabla(Fil,Col,/E).%si la combiacion ya estaba marcada entonces no se debe marcar el centro
 marcarCentroFil(Fil,Col,_,Cant):-Cant>2,Centro is Col - (Cant//2),marcar(Fil,Centro).
 % HAY QUE AGREGAR ALGO PARA Q SIGA RECORRIENDO YA SEA SI HIZO LA MARCA O
@@ -186,10 +183,9 @@ marcarCentroFil(Fil,Col,_,Cant):-Cant>2,Centro is Col - (Cant//2),marcar(Fil,Cen
 
 
 marcarColapsoCol(Col):-marcarColapsoCol(0,Col,x). %x puede ser cualquier elemento lo importante es q sea distinto a todas las muñecas del tablero
-
 marcarColapsoCol(Fil,Col,E):-tabla(Fil,Col,~X),E\=X,marcarCentroCol(Fil,Col,X,1).
-marcarColapsoCol(Fil,Col,_):-Fil<4,tabla(Fil,Col,/E),Sig is Fil+1,marcarColapsoCol(Sig,Col,E).
-marcarColapsoCol(Fil,Col,E):-Fil<4,Sig is Fil+1,marcarColapsoCol(Sig,Col,E).
+marcarColapsoCol(Fil,Col,_):-Fil<3,tabla(Fil,Col,/E),Sig is Fil+1,marcarColapsoCol(Sig,Col,E).
+marcarColapsoCol(Fil,Col,E):-Fil<3,Sig is Fil+1,marcarColapsoCol(Sig,Col,E).
 marcarColapsoCol(_,_,_).
 
 % solo se verifica hasta la tercera columna ya que no van a haber
@@ -197,7 +193,7 @@ marcarColapsoCol(_,_,_).
 % Si se encuentra un elemento con marca de colapsar se envia por
 % parametro para evitar agregar otra marca de colapsar
 
-marcarCentroCol(Fil,Col,E,Cant):-Fil<6,Sig is Fil+1,tabla(Sig,Col,~E),C is Cant+1,marcarCentroCol(Sig,Col,E,C).%falla cuando llega al final o encuentra aldo distinto
+marcarCentroCol(Fil,Col,E,Cant):-Fil<5,Sig is Fil+1,tabla(Sig,Col,~E),C is Cant+1,marcarCentroCol(Sig,Col,E,C).%falla cuando llega al final o encuentra aldo distinto
 marcarCentroCol(Fil,Col,E,_):-tabla(Fil,Col,/E).%si la combiacion ya estaba marcada entonces no se debe marcar el centro
 marcarCentroCol(Fil,Col,_,Cant):-Cant>2,Centro is Fil - (Cant//2),marcar(Centro,Col).
 % HAY QUE AGREGAR ALGO PARA Q SIGA RECORRIENDO YA SEA SI HIZO LA MARCA O
@@ -215,7 +211,7 @@ verificarCombinacionColumnaDes(Fil,Col,Marcada):-ColNueva is Col+1,tabla(Fil,Col
 verificarCombinacionColumnaDes(Fil,Col,Marcada):-ColNueva is Col-1,tabla(Fil,ColNueva,Marcada).
 
 marcarColapsoColumnaDes(Fil,Col):-tabla(Fil,Col,~M),verificarCombinacionColumnaDes(Fil,Col,~M),marcar(Fil,Col),marcarColapsoColumnaDes(Fil,Col).
-marcarColapsoColumnaDes(Fil,Col):-Fil<5,NuevaFil is Fil+1,marcarColapsoColumnaDes(NuevaFil,Col),imprimirTablero.
+marcarColapsoColumnaDes(Fil,Col):-Fil<5,NuevaFil is Fil+1,marcarColapsoColumnaDes(NuevaFil,Col).
 marcarColapsoColumnaDes(_,_).
 
 verificarCombinacionFilaDes(Fil,Col,Marcada):-FilNueva is Fil+1,tabla(FilNueva,Col,Marcada).
@@ -233,6 +229,3 @@ agrandar(r2,r3).
 agrandar(M,M).
 
 guardarEvol:-pasarTableroAListas(0,Tablero),assertz(evol(Tablero)).
-
-generarRandom:-guardarTablero([[x,x,x,x,x],[x,x,x,x,x],[x,x,x,x,x],[x,x,x,x,x],[x,x,x,x,x]]),reemplazarPorRandom.
-

@@ -44,8 +44,6 @@ pasarFila([Elem1|Elementos],NumFila,NumColumna):-pasarElemento(Elem1,NumFila,Num
 % tabla(Elemento,NumFila,NumColumna)
 pasarElemento(Elemento,NumFila,NumColumna):-assert(tabla(NumFila,NumColumna,Elemento)).
 
-pasar:-forall(tabla(X,Y,Z),imprimir(X,Y,Z)).
-
 imprimir(X,Y,Z):-write(' La fila es: '),write(X),write(' La columna es: '),write(Y),write(' La muñeca es:'),writeln(Z).
 
 % mover/3
@@ -62,7 +60,6 @@ mover(abajo,Col,N):-desplazarCol(Col,N).%,eliminarColapsadosAux,bucleCombinacion
 
 desplazarCol(C,N):-forall(tabla(F,C,E),(retract(tabla(F,C,E)),NuevaFila is ((N+F) mod 5), assert(tabla(NuevaFila,C,E)))),guardarEvol,combinarElementosCol(C).
 desplazarFila(F,N):-forall(tabla(F,C,E),(retract(tabla(F,C,E)),NuevaColumna is ((N+C) mod 5), assert(tabla(F,NuevaColumna,E)))),guardarEvol,combinarElementosFil(F).
-cantElem:-forall(tabla(_,_,Z),writeln(Z)).
 
 combinarElementosCol(Col):-forall(member(X,[0,1,2,3,4]),buscarCombFila(X)),buscarCombColumna(Col),marcarColapsoColumnaDes(0,Col),marcarColapsoCol(Col),agrandarColapsados,guardarEvol,eliminarColapsadosAux.
 combinarElementosFil(Fil):-forall(member(X,[0,1,2,3,4]),buscarCombColumna(X)),buscarCombFila(Fil),marcarColapsoFilaDes(Fil,0),marcarColapsoFil(Fil),agrandarColapsados,guardarEvol,eliminarColapsadosAux.
