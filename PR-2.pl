@@ -1,10 +1,12 @@
 :- op(300,fx,/). %operador que marca que un elemento debe ser eliminado
 
 :- op(300,fx,~). %operador que marca que un elemento debe aumentar su tamaño
+
 :- dynamic tabla/3.
 :- dynamic evol/1.
 
-desplazar(Dir,Num,Cant,Tablero,_EvolTablero):- guardarTablero(Tablero),Desplazamiento is Num-1,mover(Dir,Desplazamiento,Cant).
+
+desplazar(Dir,Num,Cant,Tablero,_EvolTablero):- guardarTablero(Tablero),Desplazamiento is Num-1,mover(Dir,Desplazamiento,Cant),bucleCombinacionesAux.
 
 % guardarTablero (+Tablero).
 % guarda todos los elementos de la lista como predicados de la forma
@@ -33,15 +35,14 @@ mover(abajo,Col,N):-desplazarCol(Col,N).%,eliminarColapsadosAux,bucleCombinacion
 
 
 
-desplazarCol(C,N):-forall(tabla(F,C,E),(retract(tabla(F,C,E)),NuevaFila is ((N+F) mod 5), assert(tabla(NuevaFila,C,E)))),combinarElementosCol(C).%,eliminarColapsados.
-
-desplazarFila(F,N):-forall(tabla(F,C,E),(retract(tabla(F,C,E)),NuevaColumna is ((N+C) mod 5), assert(tabla(F,NuevaColumna,E)))),combinarElementosFil(F).%,eliminarColapsados.
+desplazarCol(C,N):-forall(tabla(F,C,E),(retract(tabla(F,C,E)),NuevaFila is ((N+F) mod 5), assert(tabla(NuevaFila,C,E)))),guardarEvol,combinarElementosCol(C).
+desplazarFila(F,N):-forall(tabla(F,C,E),(retract(tabla(F,C,E)),NuevaColumna is ((N+C) mod 5), assert(tabla(F,NuevaColumna,E)))),guardarEvol,combinarElementosFil(F).
 cantElem:-forall(tabla(_,_,Z),writeln(Z)).
 
-combinarElementosCol(Col):-forall(member(X,[0,1,2,3,4]),buscarCombFila(X)),buscarCombColumna(Col),marcarColapsoColumnaDes(0,Col),marcarColapsoCol(Col).
-combinarElementosFil(Fil):-forall(member(X,[0,1,2,3,4]),buscarCombColumna(X)),buscarCombFila(Fil),marcarColapsoFilaDes(Fil,0),marcarColapsoFil(Fil).
+combinarElementosCol(Col):-forall(member(X,[0,1,2,3,4]),buscarCombFila(X)),buscarCombColumna(Col),marcarColapsoColumnaDes(0,Col),marcarColapsoCol(Col),agrandarColapsados,guardarEvol,eliminarColapsados.
+combinarElementosFil(Fil):-forall(member(X,[0,1,2,3,4]),buscarCombColumna(X)),buscarCombFila(Fil),marcarColapsoFilaDes(Fil,0),marcarColapsoFil(Fil),agrandarColapsados,guardarEvol,eliminarColapsados.
 
-bucleCombinacionesAux:-imprimirTablero,pasarTableroAListas(0,TableroViejo),bucleCombinaciones,pasarTableroAListas(0,TableroNuevo),TableroNuevo\=TableroViejo.
+bucleCombinacionesAux:-imprimirTablero,pasarTableroAListas(0,TableroViejo),bucleCombinaciones,pasarTableroAListas(0,TableroNuevo),TableroNuevo\=TableroViejo,bucleCombinacionesAux.
 bucleCombinacionesAux.
 
 bucleCombinaciones:-forall(member(X,[0,1,2,3,4]),(buscarCombFila(X),buscarCombColumna(X),marcarColapsoFil(X),marcarColapsoCol(X))),eliminarColapsadosAux.
@@ -65,6 +66,8 @@ eliminarColapsados:-tabla(F,C,~Z),retract(tabla(F,C,~Z)),gravedad(F,C).
 %
 
 gravedad(F,C):-forall((tabla(Fila,C,X),Fila=<F),(retract(tabla(Fila,C,X)),NuevaFila is Fila+1,assert(tabla(NuevaFila,C,X)),writeln(X))),random_member(Random, [a1,v1,r1]),assert(tabla(0,C,Random)).
+
+reemplazarPorRandom:-forall(tabla(X,Y,x),(retract(tabla(X,Y,x)),random_member(Random, [a1,v1,r1]),assert(tabla(X,Y,Random)))).
 
 imprimirTablero:-pasarTableroAListas(0,R),writeln(R).
 
