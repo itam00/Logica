@@ -4,7 +4,12 @@
 :- dynamic evol/1.
 
 
-desplazar(Dir,Num,Cant,Tablero,EvolTablero):- guardarTablero(Tablero),Desplazamiento is Num-1,mover(Dir,Desplazamiento,Cant),guardarEvol,eliminarColapsadosAux,guardarEvol,reemplazarPorRandom,writeln(' '),bucleCombinacionesAux,recuperarTableros(EvolTablero),eliminarTodo.
+desplazar(Dir,Num,Cant,Tablero,EvolTablero):- guardarTablero(Tablero),Desplazamiento is Num-1,mover(Dir,Desplazamiento,Cant),aplicarColisiones(EvolTablero).%,guardarEvol,hayColisiones,eliminarColapsadosAux,guardarEvol,reemplazarPorRandom,writeln(' '),bucleCombinacionesAux,recuperarTableros(EvolTablero),eliminarTodo.
+
+hayColisiones:-tabla(_,_,~_).
+
+aplicarColisiones(EvolTablero):-hayColisiones,eliminarColapsadosAux,guardarEvol,reemplazarPorRandom,writeln(' '),bucleCombinacionesAux,recuperarTableros(EvolTablero),eliminarTodo.
+aplicarColisiones(EvolTablero):-recuperarTableros(EvolTablero),eliminarTodo.
 
 recuperarTableros(Lista):-findall(Tablero,evol(Tablero),Lista),forall(evol(X),retract(evol(X))).
 
@@ -14,12 +19,23 @@ recuperarTableros(Lista):-findall(Tablero,evol(Tablero),Lista),forall(evol(X),re
 % la primer fila en pasarse a hechos es la numero 0.
 guardarTablero(Tablero):-pasarAHechos(Tablero,0).
 
+%pasarAHechos/2
+% Pasa un tablero en formato lista de listas a hechos (un hecho por
+% elemento)
+% pasarAHechos(+Tablero,+NumFila)
 pasarAHechos([],_).
 pasarAHechos([FilaActual|Filas],NumFila):-pasarFila(FilaActual,NumFila,0),SigFila is (NumFila+1),pasarAHechos(Filas,SigFila).
 
+%pasarFila/3
+% Pasa una lista que representa una fila de un tablero a hechos (un
+% hecho por elemento)
+% pasarFila(+Fila,+NumFila,+NumColumna)
 pasarFila([],_,_).
 pasarFila([Elem1|Elementos],NumFila,NumColumna):-pasarElemento(Elem1,NumFila,NumColumna),SigColumna is (NumColumna+1),pasarFila(Elementos,NumFila,SigColumna).
 
+% pasarElemento/3 pasa un elemento en la fila NumFila y columna
+% NumColumna a hecho.
+% pasarElemento(+Elemento,+NumFila,+NumColumna)
 pasarElemento(Elemento,NumFila,NumColumna):-assert(tabla(NumFila,NumColumna,Elemento)).
 
 
@@ -46,6 +62,11 @@ desplazarFila(F,N):-forall(tabla(F,C,E),(retract(tabla(F,C,E)),NuevaColumna is (
 combinarElementosCol(Col):-forall(member(X,[0,1,2,3,4]),buscarCombFila(X)),buscarCombColumna(Col),marcarColapsoColumnaDes(0,Col),marcarColapsoCol(Col),agrandarColapsados.
 combinarElementosFil(Fil):-forall(member(X,[0,1,2,3,4]),buscarCombColumna(X)),buscarCombFila(Fil),marcarColapsoFilaDes(Fil,0),marcarColapsoFil(Fil),agrandarColapsados.
 
+%bucleCombinacionesAux/0
+% busca repetitivamente nuevas combinaciones, solucionando las
+% colisiones encontradas, hasta que el tablero anterior sea igual al
+% tablero actual (es decir, hasta que no haya mas combinaciones en el
+% tablero)
 bucleCombinacionesAux:-pasarTableroAListas(0,TableroViejo),bucleCombinaciones,pasarTableroAListas(0,TableroNuevo),TableroViejo\=TableroNuevo,bucleCombinacionesAux.
 bucleCombinacionesAux:-guardarEvol.
 
@@ -66,7 +87,7 @@ bucleCombinaciones:-forall(member(X,[0,1,2,3,4]),(buscarCombFila(X),buscarCombCo
 eliminarTodo:-forall(tabla(X,Y,Z),retract(tabla(X,Y,Z))).
 
 eliminarColapsadosAux:-eliminarColapsados,eliminarColapsadosAux.
-eliminarColapsadosAux.%:-guardarEvol,reemplazarPorRandom,guardarEvol.
+eliminarColapsadosAux.
 
 eliminarColapsados:-tabla(F,C,~Z),retract(tabla(F,C,~Z)),gravedad(F,C).
 
@@ -152,8 +173,9 @@ marcar(Fil,Col):-retract(tabla(Fil,Col,E)),assert(tabla(Fil,Col,~E)).
 marcarColapsoFil(Fil):-marcarColapsoFil(Fil,0,x). %x puede ser cualquier elemento lo importante es q sea distinto a todas las muñecas del tablero
 
 % marcarColapsoFil/3 busca muñecas alineadas y marcadas (con una marca
-% de eliminar) en un fila que no tengan una marca de colapsar y se las
-% agrega en el centro
+% de eliminar) en una fila que no tengan una marca de colapsar y se las
+% agrega en el centro (si son tres la coloca en la muñeca del medio y
+% sino en alguna de las del medio)
 marcarColapsoFil(Fil,Col,E):-tabla(Fil,Col,~X),E\=X,marcarCentroFil(Fil,Col,X,1).
 marcarColapsoFil(Fil,Col,_):-Col<3,tabla(Fil,Col,/E),Sig is Col+1,marcarColapsoFil(Fil,Sig,E).
 marcarColapsoFil(Fil,Col,E):-Col<3,Sig is Col+1,marcarColapsoFil(Fil,Sig,E).
@@ -174,9 +196,9 @@ marcarCentroFil(Fil,Col,_,Cant):-Cant>2,Centro is Col - (Cant//2),marcar(Fil,Cen
 marcarColapsoCol(Col):-marcarColapsoCol(0,Col,x). %x puede ser cualquier elemento lo importante es q sea distinto a todas las muñecas del tablero
 
 
-% marcarColapsoFil/3 busca muñecas alineadas y marcadas (con una marca
+% marcarColapsoCol/3 busca muñecas alineadas y marcadas (con una marca
 % de eliminar) en un columna que no tengan una marca de colapsar y se
-% las agrega en el centro
+% las agrega en el centro (si son tres la coloca en la muñeca del medio y sino en alguna de las del medio)
 marcarColapsoCol(Fil,Col,E):-tabla(Fil,Col,~X),E\=X,marcarCentroCol(Fil,Col,X,1).
 marcarColapsoCol(Fil,Col,_):-Fil<3,tabla(Fil,Col,/E),Sig is Fil+1,marcarColapsoCol(Sig,Col,E).
 marcarColapsoCol(Fil,Col,E):-Fil<3,Sig is Fil+1,marcarColapsoCol(Sig,Col,E).
@@ -194,10 +216,10 @@ marcarCentroCol(Fil,Col,_,Cant):-Cant>2,Centro is Fil - (Cant//2),marcar(Centro,
 % NO PARA EL CASO DEL BUCLE
 
 
-% verificarCombinacionColumnaDes/3 verifica si hay una combinacion
+% marcarColapsoFilaDes/3 verifica si hay una combinacion
 % de muñecas marcadas (con marcas de eliminar) en una fila que atraviese
 % a la columa desplazada, en caso de encontrar una combinacion
-% marca el elemento encontrado en la fila y columna redibidas por
+% marca el elemento encontrado en la fila y columna recibidas por
 % parametro
 marcarColapsoFilaDes(Fil,Col):-tabla(Fil,Col,~M),verificarCombinacionFilaDes(Fil,Col,~M),marcar(Fil,Col),marcarColapsoFilaDes(Fil,Col).
 marcarColapsoFilaDes(Fil,Col):-Col<5,NuevaCol is Col+1,marcarColapsoFilaDes(Fil,NuevaCol).
@@ -210,11 +232,11 @@ marcarColapsoFilaDes(_,_).
 verificarCombinacionColumnaDes(Fil,Col,Marcada):-ColNueva is Col+1,tabla(Fil,ColNueva,Marcada).
 verificarCombinacionColumnaDes(Fil,Col,Marcada):-ColNueva is Col-1,tabla(Fil,ColNueva,Marcada).
 
-% verificarCombinacionColumnaDes/3 verifica si hay una combinacion
-% de muñecas marcadas (con marcas de eliminar) en una columna que
-% atraviese a la fila desplazada, en c aso de encontrar una combinacion
-% marca el elemento encontrado en la fila y columna redibidas por
-% parametro
+% MarcarColapsoColumnaDes/3 verifica si hay una combinacion
+% de muñecas marcadas (con marcas de eliminar) en una fila que
+% atraviese a la columna desplazada, en caso de encontrar una
+% combinacion marca el elemento encontrado en la fila y columna
+% recibidas por parametro
 marcarColapsoColumnaDes(Fil,Col):-tabla(Fil,Col,~M),verificarCombinacionColumnaDes(Fil,Col,~M),marcar(Fil,Col),marcarColapsoColumnaDes(Fil,Col).
 marcarColapsoColumnaDes(Fil,Col):-Fil<5,NuevaFil is Fil+1,marcarColapsoColumnaDes(NuevaFil,Col).
 marcarColapsoColumnaDes(_,_).
@@ -238,5 +260,6 @@ agrandar(r1,r2).
 agrandar(r2,r3).
 agrandar(M,M).
 
-%guardarEvol/0 guarda el estado del tablero actual
+% guardarEvol/0 guarda el estado del tablero actual en un hecho
+% evol(Tablero)
 guardarEvol:-pasarTableroAListas(0,Tablero),assertz(evol(Tablero)).
