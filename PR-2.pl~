@@ -8,8 +8,8 @@ desplazar(Dir,Num,Cant,Tablero,EvolTablero):- guardarTablero(Tablero),Desplazami
 
 hayColisiones:-tabla(_,_,~_).
 
-aplicarColisiones(EvolTablero):-hayColisiones,eliminarColapsadosAux,guardarEvol,reemplazarPorRandom,writeln(' '),bucleCombinacionesAux,recuperarTableros(EvolTablero),eliminarTodo.
-aplicarColisiones(EvolTablero):-recuperarTableros(EvolTablero),eliminarTodo.
+aplicarColisiones(EvolTablero):-hayColisiones,guardarEvol,eliminarColapsadosAux,guardarEvol,reemplazarPorRandom,writeln(' '),bucleCombinacionesAux,recuperarTableros(EvolTablero),eliminarTodo.
+aplicarColisiones(EvolTablero):-guardarEvol,recuperarTableros(EvolTablero),eliminarTodo.
 
 recuperarTableros(Lista):-findall(Tablero,evol(Tablero),Lista),forall(evol(X),retract(evol(X))).
 
@@ -62,6 +62,11 @@ desplazarFila(F,N):-forall(tabla(F,C,E),(retract(tabla(F,C,E)),NuevaColumna is (
 combinarElementosCol(Col):-forall(member(X,[0,1,2,3,4]),buscarCombFila(X)),buscarCombColumna(Col),marcarColapsoColumnaDes(0,Col),marcarColapsoCol(Col),agrandarColapsados.
 combinarElementosFil(Fil):-forall(member(X,[0,1,2,3,4]),buscarCombColumna(X)),buscarCombFila(Fil),marcarColapsoFilaDes(Fil,0),marcarColapsoFil(Fil),agrandarColapsados.
 
+%bucleCombinacionesAux/0
+% busca repetitivamente nuevas combinaciones, solucionando las
+% colisiones encontradas, hasta que el tablero anterior sea igual al
+% tablero actual (es decir, hasta que no haya mas combinaciones en el
+% tablero)
 bucleCombinacionesAux:-pasarTableroAListas(0,TableroViejo),bucleCombinaciones,pasarTableroAListas(0,TableroNuevo),TableroViejo\=TableroNuevo,bucleCombinacionesAux.
 bucleCombinacionesAux:-guardarEvol.
 
@@ -257,4 +262,5 @@ agrandar(M,M).
 
 % guardarEvol/0 guarda el estado del tablero actual en un hecho
 % evol(Tablero)
-guardarEvol:-pasarTableroAListas(0,Tablero),assertz(evol(Tablero)).
+guardarEvol:-pasarTableroAListas(0,Tablero),not(evol(Tablero)),assertz(evol(Tablero)).
+guardarEvol.

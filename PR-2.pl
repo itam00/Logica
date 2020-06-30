@@ -8,8 +8,8 @@ desplazar(Dir,Num,Cant,Tablero,EvolTablero):- guardarTablero(Tablero),Desplazami
 
 hayColisiones:-tabla(_,_,~_).
 
-aplicarColisiones(EvolTablero):-hayColisiones,eliminarColapsadosAux,guardarEvol,reemplazarPorRandom,writeln(' '),bucleCombinacionesAux,recuperarTableros(EvolTablero),eliminarTodo.
-aplicarColisiones(EvolTablero):-recuperarTableros(EvolTablero),eliminarTodo.
+aplicarColisiones(EvolTablero):-hayColisiones,guardarEvol,eliminarColapsadosAux,guardarEvol,reemplazarPorRandom,writeln(' '),bucleCombinacionesAux,recuperarTableros(EvolTablero),eliminarTodo.
+aplicarColisiones(EvolTablero):-guardarEvol,recuperarTableros(EvolTablero),eliminarTodo.
 
 recuperarTableros(Lista):-findall(Tablero,evol(Tablero),Lista),forall(evol(X),retract(evol(X))).
 
@@ -73,14 +73,6 @@ bucleCombinacionesAux:-guardarEvol.
 
 
 bucleCombinaciones:-forall(member(X,[0,1,2,3,4]),(buscarCombFila(X),buscarCombColumna(X))),forall(member(X,[0,1,2,3,4]),(marcarColapsoFil(X),marcarColapsoCol(X))),guardarEvol,eliminarColapsadosAux,guardarEvol,reemplazarPorRandom,agrandarColapsados.
-
-% aca falta lo que hace todo en bucle, solo hay que recorrer todas las
-% filas y columnas, marcar y dps agregar los colapsar hasta que no se
-% puede eliminar nada
-%
-
-%de aca para abajo es todo para encontrar y marcar combiaciones
-%
 
 %elimina todo el tablero
 
@@ -262,4 +254,5 @@ agrandar(M,M).
 
 % guardarEvol/0 guarda el estado del tablero actual en un hecho
 % evol(Tablero)
-guardarEvol:-pasarTableroAListas(0,Tablero),assertz(evol(Tablero)).
+guardarEvol:-pasarTableroAListas(0,Tablero),not(evol(Tablero)),assertz(evol(Tablero)).
+guardarEvol.
